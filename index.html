@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NAVER</title>
+
+<!-- ===== 앱 설치(PWA) 설정 : 같은 폴더의 manifest.webmanifest / sw.js / icon-*.png 필요 ===== -->
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="네이버">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+/* ============ 공통 ============ */
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","맑은 고딕",Dotum,"돋움",Helvetica,sans-serif;
+  background:#fff;color:#222;font-size:13px;-webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+.hide{display:none !important;}
+/* 광고 슬롯 : 비어 있으면 번호와 실제 크기를 표시, 관리자모드에서 이미지를 넣으면 그 이미지가 채워진다 */
+.ad-slot{background:#f2f3f5;border:1px solid #eceef1;border-radius:6px;overflow:hidden;position:relative;
+  display:flex;align-items:center;justify-content:center;}
+.ad-slot .lbl{font-size:10.5px;color:#a3a9b0;text-align:center;line-height:1.35;letter-spacing:-.2px;padding:1px;
+  white-space:nowrap;font-weight:700;}
+.ad-slot .lbl em{display:block;font-style:normal;font-weight:400;color:#b7bcc2;font-size:10px;}
+.ad-slot img{width:100%;height:100%;display:block;}
+.ad-slot.filled{background:#fff;}
+/* 화면은 서로 완전히 분리 : 각 화면이 자기 영역 안에서만 스크롤된다
+   (예전에 #screen-mail 의 display:flex 가 .screen 의 display:none 을 이겨서
+    메인 화면 아래로 메일 화면이 따라 나오던 문제를 막는다) */
+.screen{display:none;}
+.screen.on{display:block;}
+#screen-home.on{height:100vh;overflow:auto;padding-bottom:80px;}
+
+/* 아이콘 기본 */
+.i{display:inline-block;vertical-align:middle;width:16px;height:16px;fill:currentColor;flex:none;}
+.i10{width:10px;height:10px;}.i11{width:11px;height:11px;}.i12{width:12px;height:12px;}
+.i13{width:13px;height:13px;}.i14{width:14px;height:14px;}.i15{width:15px;height:15px;}
+.i17{width:17px;height:17px;}.i18{width:18px;height:18px;}.i20{width:20px;height:20px;}
+.i22{width:22px;height:22px;}.i26{width:26px;height:26px;}.i30{width:30px;height:30px;}
+
+/* ============ 화면1 : 네이버 메인 ============ */
+.gnb{height:56px;display:flex;align-items:center;padding:0 24px;position:relative;}
+.gnb .ham{width:34px;height:34px;display:flex;flex-direction:column;justify-content:center;gap:5px;align-items:center;background:none;border:0;}
+.gnb .ham span{display:block;width:18px;height:2px;background:#222;border-radius:2px;}
+.pay-logo{width:30px;height:30px;border:1px solid #e3e5e8;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#3a3a3a;margin-left:4px;letter-spacing:-.5px;}
+.gnb-right{margin-left:auto;display:flex;align-items:center;gap:22px;}
+.ico-btn{position:relative;background:none;border:0;padding:0;line-height:1;color:#3a3a3a;display:flex;align-items:center;}
+.ico-btn .badge{position:absolute;top:-6px;right:-9px;min-width:16px;height:16px;padding:0 4px;background:#f44;color:#fff;
+  border-radius:9px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+.search-zone{position:relative;display:flex;justify-content:center;margin-top:2px;}
+.search-box{width:710px;height:50px;border:2px solid #03c75a;border-radius:26px;display:flex;align-items:center;padding:0 8px 0 20px;background:#fff;}
+.search-box input{flex:1;height:100%;border:0;outline:none;font-size:17px;color:#222;background:transparent;}
+.search-box input::placeholder{color:#8d9299;}
+.kb-ico{background:none;border:0;color:#555;margin-right:6px;display:flex;align-items:center;}
+.ai-btn{height:34px;padding:0 14px 0 11px;border:1px solid #cfe9ff;border-radius:18px;background:#f0f8ff;color:#0068c3;
+  font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px;}
+.sugg{position:absolute;top:52px;width:710px;background:#fff;border:1px solid #03c75a;border-top:0;border-radius:0 0 16px 16px;
+  box-shadow:0 6px 16px rgba(0,0,0,.08);padding:10px 0 6px;z-index:60;}
+.sugg .sg-head{display:flex;align-items:center;justify-content:space-between;padding:4px 18px 8px;color:#767b82;font-size:12px;}
+.sugg .sg-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;}
+.sugg .sg-item:hover{background:#f7f8fa;}
+.sugg .sg-item .t{flex:1;font-size:14px;color:#333;}
+.sugg .sg-item .cl{color:#b3b6bb;display:flex;}
+.sugg .sg-item .ck{color:#b9bec4;display:flex;}
+.sugg .sg-empty{padding:16px 18px;color:#9aa0a6;font-size:13px;}
+.sugg .sg-foot{border-top:1px solid #f1f2f4;margin-top:6px;padding:9px 18px 3px;display:flex;justify-content:space-between;color:#8d9299;font-size:12px;}
+
+.shortcut-row{display:flex;justify-content:center;align-items:flex-start;gap:0;margin-top:22px;position:relative;}
+.sc{width:66px;display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:0;padding:0;}
+.sc .ic{width:38px;height:38px;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.07));}
+.sc .lb{font-size:12px;color:#333;}
+.sc:hover .lb{text-decoration:underline;}
+
+.home-wrap{width:1280px;margin:26px auto 0;display:flex;gap:26px;}
+.col-left{width:830px;align-self:flex-start;}
+.col-right{width:424px;align-self:flex-start;}
+
+.banner-top{width:100%;height:198px;margin-bottom:34px;}   /* 세로 1.5배 + 뉴스 카드를 아래로 내림 */
+
+.card{border:1px solid #e9ebee;border-radius:10px;background:#fff;}
+.news-card{padding:0;}
+.news-tabs{display:flex;align-items:center;gap:16px;padding:14px 18px 10px;border-bottom:1px solid #f1f2f4;}
+.news-tabs .tb{background:none;border:0;padding:0;font-size:14px;color:#666;display:flex;align-items:center;gap:3px;}
+.news-tabs .tb.on{font-weight:800;color:#111;}
+.news-tabs .tb.on small{font-weight:400;color:#666;font-size:12px;}
+.news-tabs .live{color:#f44;font-size:10px;font-weight:700;border:1px solid #ffd2d2;border-radius:9px;padding:1px 5px 1px 4px;
+  display:inline-flex;align-items:center;gap:2px;}
+.news-tabs .games{margin-left:auto;font-weight:800;color:#1c5fd1;font-style:italic;font-size:13px;letter-spacing:-.3px;}
+.news-head{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid #f1f2f4;background:#fafbfc;}
+.news-head .dd{display:flex;align-items:center;gap:3px;font-size:12px;color:#444;font-weight:700;white-space:nowrap;}
+.news-head .press{font-size:12px;color:#0068c3;white-space:nowrap;}
+.news-head .hl{flex:1;font-size:13px;color:#222;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.news-head .hl:hover{text-decoration:underline;}
+.news-head .rt{display:flex;gap:10px;font-size:12px;color:#555;white-space:nowrap;}
+.news-head .rt b{color:#111;}
+.press-grid{display:grid;grid-template-columns:repeat(6,1fr);}
+.press-grid .pg{height:56px;border-right:1px solid #f1f2f4;border-bottom:1px solid #f1f2f4;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;color:#333;letter-spacing:-.4px;cursor:pointer;}
+.press-grid .pg:nth-child(6n){border-right:0;}
+.press-grid .pg:nth-child(n+19){border-bottom:0;}
+.press-grid .pg:hover{background:#fafbfc;}
+.news-list{padding:4px 0;}
+.news-list .nl{display:flex;gap:10px;padding:11px 18px;border-bottom:1px solid #f6f7f8;align-items:flex-start;cursor:pointer;}
+.news-list .nl:last-child{border-bottom:0;}
+.news-list .nl:hover .tt{text-decoration:underline;}
+.news-list .nl .no{color:#03c75a;font-weight:800;width:14px;flex:none;}
+.news-list .nl .tt{font-size:13.5px;color:#222;line-height:1.45;}
+.news-list .nl .src{font-size:11px;color:#9aa0a6;margin-top:3px;}
+.news-foot{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 0;position:relative;}
+.news-foot .arw{width:24px;height:24px;border:1px solid #e5e7ea;border-radius:50%;background:#fff;color:#888;
+  display:inline-flex;align-items:center;justify-content:center;}
+.news-foot .more{font-size:12px;color:#0068c3;}
+.news-foot .more i{color:#999;font-style:normal;}
+.news-foot .vw{position:absolute;right:14px;display:flex;gap:6px;}
+.news-foot .vw button{width:22px;height:22px;border:1px solid #e5e7ea;background:#fff;border-radius:4px;color:#9aa0a6;
+  display:inline-flex;align-items:center;justify-content:center;}
+.news-foot .vw button.on{background:#f0f1f3;color:#444;border-color:#dcdee1;}
+
+/* 우측 */
+.login-card{padding:0;display:flex;flex-direction:column;overflow:hidden;}
+.lc-top{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 0;}
+.avatar{width:54px;height:54px;border-radius:50%;background:#eceef1;position:relative;flex:none;overflow:visible;
+  display:flex;align-items:center;justify-content:center;color:#b9bec4;}
+.avatar .pic{width:54px;height:54px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#eceef1;}
+.avatar .pic img{width:100%;height:100%;object-fit:cover;}
+.avatar .cog{position:absolute;right:-2px;bottom:-2px;width:19px;height:19px;border-radius:50%;background:#fff;border:1px solid #e0e2e5;
+  display:flex;align-items:center;justify-content:center;color:#888;}
+.lc-info{flex:1;padding-top:2px;}
+.lc-info .l1{display:flex;align-items:center;gap:8px;}
+.lc-info .nm{font-size:15px;font-weight:700;color:#111;}
+.lc-info .nid{font-size:12px;color:#767b82;display:flex;align-items:center;gap:3px;}
+.lc-info .em{font-size:12px;color:#767b82;margin-top:3px;}
+.logout{height:30px;padding:0 12px;border:1px solid #dcdee1;border-radius:6px;background:#fff;color:#444;font-size:12px;
+  display:flex;align-items:center;gap:5px;}
+.lc-sub{display:flex;align-items:center;gap:12px;margin:12px 18px 4px 84px;font-size:12px;color:#555;}
+.lc-sub .chip{display:flex;align-items:center;gap:4px;}
+.lc-sub .sq{width:15px;height:15px;border-radius:3px;background:#03c75a;color:#fff;font-size:8px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;}
+.lc-tabs{display:flex;align-items:center;border-top:1px solid #f1f2f4;border-bottom:1px solid #eceef1;margin-top:12px;}
+.lc-tabs .lt{flex:1;height:46px;background:none;border:0;font-size:13px;color:#333;display:flex;align-items:center;
+  justify-content:center;gap:4px;position:relative;}
+.lc-tabs .lt b{color:#0068c3;font-size:12px;font-weight:700;}
+.lc-tabs .lt:hover{background:#fafbfc;}
+.lc-tabs .lt.on{color:#0b8b3f;font-weight:700;}
+.lc-tabs .lt.on b{color:#0b8b3f;}
+.lc-tabs .lt.on::after{content:'';position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:#03c75a;border-radius:2px;}
+.lc-tabs .nx{width:30px;height:30px;border:1px solid #e5e7ea;border-radius:50%;background:#fff;color:#9aa0a6;margin-right:6px;
+  display:inline-flex;align-items:center;justify-content:center;}
+
+/* 로그인 카드 안 '전체 메일' 패널 — 카드 높이를 뉴스 카드 하단에 맞춰 늘린다 */
+.mailpop{flex:1;display:flex;flex-direction:column;min-height:0;}
+.mailpop .mp-h{font-size:13.5px;font-weight:700;color:#111;padding:13px 16px 6px;flex:none;}
+.mailpop .mp-list{flex:1;min-height:120px;overflow-y:auto;padding:0 8px 6px;}
+.mailpop .mp-row{padding:9px 8px;border-radius:8px;cursor:pointer;}
+.mailpop .mp-row:hover{background:#f7f8fa;}
+.mailpop .mp-row .l1{display:flex;align-items:center;gap:8px;}
+.mailpop .mp-row .nm{flex:1;min-width:0;font-size:13px;color:#9aa0a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mailpop .mp-row .tm{font-size:12px;color:#9aa0a6;white-space:nowrap;}
+.mailpop .mp-row .l2{display:flex;align-items:center;gap:8px;margin-top:4px;}
+.mailpop .mp-row .sb{flex:1;min-width:0;font-size:12.5px;color:#9aa0a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mailpop .mp-row .del{border:0;background:none;color:#c9ced3;padding:0;display:flex;}
+.mailpop .mp-row.unread .nm{color:#111;font-weight:700;}
+.mailpop .mp-row.unread .tm{color:#f04452;}
+.mailpop .mp-row.unread .sb{color:#333;}
+.mailpop .mp-empty{padding:34px 0;text-align:center;color:#9aa0a6;font-size:12.5px;}
+.mailpop .mp-f{display:flex;align-items:center;border-top:1px solid #eceef1;flex:none;}
+.mailpop .mp-f button{flex:1;height:46px;background:none;border:0;display:flex;align-items:center;gap:6px;font-size:13px;color:#333;}
+.mailpop .mp-f .fl{justify-content:flex-start;padding-left:16px;}
+.mailpop .mp-f .fr{justify-content:flex-end;padding-right:16px;}
+.mailpop .mp-f .fl:hover,.mailpop .mp-f .fr:hover{background:#fafbfc;}
+.mailpop .mp-f .gi{color:#03c75a;display:flex;}
+
+.float-btns{position:fixed;right:22px;bottom:26px;display:flex;flex-direction:column;gap:10px;z-index:50;}
+.float-btns button{width:38px;height:38px;border-radius:50%;border:1px solid #e3e5e8;background:#fff;color:#555;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:center;}
+.float-btns button:hover{background:#f7f8fa;}
+
+/* 관리자모드 진입 버튼 : 표시는 평범한 아이콘, 5초간 길게 눌러야 열린다 (표시 없음) */
+.hold-btn{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.ico-btn.hold-btn{width:28px;height:28px;border-radius:7px;justify-content:center;}
+.ico-btn.hold-btn:hover{background:#f4f5f6;}
+
+/* ============ 화면2/3 : 네이버 메일 ============ */
+#screen-mail.on{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#fff;}
+.m-gnb{height:52px;border-bottom:1px solid #eceef1;display:flex;align-items:center;padding:0 18px;flex:none;}
+.m-logo{display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;}
+.m-logo .t{font-size:17px;font-weight:700;color:#111;}
+.m-apps{margin:0 auto;display:flex;align-items:center;gap:20px;}
+.m-apps .ap{width:26px;height:26px;border-radius:6px;background:#f2f3f5;color:#9aa0a6;border:0;
+  display:flex;align-items:center;justify-content:center;}
+.m-apps .ap.on{background:#03c75a;color:#fff;}
+.m-gnb-right{display:flex;align-items:center;gap:16px;}
+.m-prof{display:flex;align-items:center;gap:6px;background:none;border:0;font-size:12px;color:#333;}
+.m-prof .av{width:24px;height:24px;border-radius:50%;background:#eceef1;overflow:hidden;display:flex;align-items:center;
+  justify-content:center;color:#b9bec4;}
+.m-prof .av img{width:100%;height:100%;object-fit:cover;}
+.m-adstrip{height:44px;display:flex;align-items:center;gap:12px;padding:0 18px;flex:none;border-bottom:1px solid #f4f5f6;}
+.m-adstrip .ph{width:56px;height:30px;}
+.m-adstrip .body{flex:1;height:30px;}
+.m-adstrip .rt{font-size:11px;color:#9aa0a6;display:flex;gap:10px;align-items:center;}
+
+.m-body{flex:1;display:flex;min-height:0;}
+.m-side{width:208px;border-right:1px solid #eceef1;padding:12px 0 20px;overflow-y:auto;flex:none;background:#fff;}
+.m-write{display:flex;gap:6px;padding:0 12px 12px;}
+.m-write button{flex:1;height:34px;border-radius:6px;border:0;font-size:13px;font-weight:700;}
+.m-write .w1{background:#03c75a;color:#fff;}
+.m-write .w2{background:#eaf7ee;color:#0b8b3f;}
+.m-quick{display:flex;padding:0 6px 12px;border-bottom:1px solid #f1f2f4;margin-bottom:8px;}
+.m-quick .q{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:#555;font-size:11px;}
+.m-quick .q .v{font-size:12px;font-weight:700;color:#0068c3;}
+.m-quick .q .ic{color:#9aa0a6;display:flex;height:14px;align-items:center;}
+.m-nav .nv{width:100%;height:36px;display:flex;align-items:center;gap:8px;padding:0 14px;background:none;border:0;font-size:13px;
+  color:#333;text-align:left;}
+.m-nav .nv:hover{background:#f7f8fa;}
+.m-nav .nv.on{background:#eaf7ee;color:#0b8b3f;font-weight:700;}
+.m-nav .nv .ic{width:16px;display:flex;align-items:center;justify-content:center;color:#9aa0a6;}
+.m-nav .nv.on .ic{color:#0b8b3f;}
+.m-nav .nv .cnt{margin-left:auto;font-size:11px;color:#0068c3;font-weight:700;}
+.m-nav .nv .tag{margin-left:auto;font-size:10px;border:1px solid #dcdee1;border-radius:3px;padding:1px 4px;color:#767b82;}
+.m-nav .nv .cv{margin-left:auto;color:#c4c7cb;display:flex;}
+.m-nav .sec{margin-top:10px;padding-top:10px;border-top:1px solid #f1f2f4;}
+.m-nav .sub{padding-left:26px;font-size:12px;color:#444;}
+.m-nav .sub .ic{color:#c4c7cb;font-size:11px;}
+.m-foot{margin-top:14px;padding:12px 14px 0;border-top:1px solid #f1f2f4;display:flex;flex-direction:column;gap:9px;font-size:12px;color:#555;}
+.m-foot .rowb{display:flex;align-items:center;}
+.m-foot .rowb .tg{margin-left:auto;font-size:10px;background:#f0f1f3;border-radius:3px;padding:2px 5px;color:#666;}
+.m-foot .cap{color:#0068c3;font-weight:700;}
+.m-foot .dim{color:#a8adb3;font-size:11.5px;line-height:1.4;}
+
+.m-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow-y:auto;}
+.m-chipbar{display:flex;align-items:center;gap:8px;padding:14px 20px 10px;}
+.m-chipbar .ch{height:30px;padding:0 14px;border-radius:16px;border:1px solid #dcdee1;background:#fff;font-size:12.5px;color:#444;position:relative;}
+.m-chipbar .ch.on{border-color:#03c75a;color:#0b8b3f;font-weight:700;}
+.m-chipbar .ch .dot{position:absolute;top:4px;right:6px;width:5px;height:5px;background:#03c75a;border-radius:50%;}
+.m-chipbar .srch{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.m-chipbar .srch .box{width:230px;height:32px;background:#f5f6f7;border-radius:6px;display:flex;align-items:center;padding:0 10px;color:#9aa0a6;}
+.m-chipbar .srch .box input{flex:1;border:0;background:transparent;outline:none;font-size:12.5px;}
+.m-chipbar .srch .det{font-size:12px;color:#444;display:flex;align-items:center;gap:3px;}
+
+.m-toolbar{display:flex;align-items:center;gap:14px;padding:10px 20px;border-top:1px solid #f1f2f4;border-bottom:1px solid #eceef1;
+  font-size:12.5px;color:#444;}
+.m-toolbar .tb{background:none;border:0;color:#444;font-size:12.5px;padding:0;display:inline-flex;align-items:center;gap:3px;}
+.m-toolbar .tb:hover{text-decoration:underline;}
+.m-toolbar .sep{width:1px;height:12px;background:#e5e7ea;}
+.m-toolbar .cnt{color:#767b82;}
+.m-toolbar .cnt b{color:#0068c3;}
+.m-toolbar .rt{margin-left:auto;display:flex;align-items:center;gap:10px;color:#767b82;}
+.m-toolbar .cbx{display:inline-flex;align-items:center;gap:3px;color:#8d9299;}
+
+.mail-row{display:flex;align-items:center;gap:10px;padding:0 20px;height:39px;border-bottom:1px solid #f4f5f6;cursor:pointer;}
+.mail-row:hover{background:#fafbfc;}
+.mail-row .cb{color:#c4c7cb;display:flex;}
+.mail-row .st{background:none;border:0;color:#d8dade;padding:0;display:flex;align-items:center;}
+.mail-row .st.on{color:#ffc400;}
+.mail-row .env{color:#c4c8cd;width:17px;display:flex;justify-content:center;}
+.mail-row.unread .env{color:#7ba3e8;}
+.mail-row .from{width:210px;font-size:12.5px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mail-row.unread .from{font-weight:700;color:#111;}
+.mail-row .subj{flex:1;min-width:0;font-size:12.5px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:flex;align-items:center;gap:4px;}
+.mail-row.unread .subj{font-weight:700;color:#111;}
+.mail-row .subj .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mail-row .imp{color:#f04452;display:flex;}
+.mail-row .mini{color:#c4c8cd;display:flex;}
+.mail-row .time{width:76px;text-align:right;font-size:12px;color:#767b82;}
+.mail-row .clip{color:#9aa0a6;display:flex;}
+.empty-box{padding:70px 0;text-align:center;color:#9aa0a6;font-size:13px;}
+.pager{display:flex;align-items:center;justify-content:center;gap:6px;padding:22px 0 40px;}
+.pager button{min-width:26px;height:26px;border:0;background:none;color:#555;font-size:12px;border-radius:4px;
+  display:inline-flex;align-items:center;justify-content:center;}
+.pager button.on{background:#f0f1f3;font-weight:700;color:#111;}
+
+/* 상세 */
+.dt-head{display:flex;align-items:center;gap:10px;padding:14px 20px 10px;font-size:13px;}
+.dt-head .back{display:flex;align-items:center;gap:5px;background:none;border:0;font-size:13.5px;color:#111;font-weight:700;padding:0;}
+.dt-head .back:hover{text-decoration:underline;}
+.dt-head .cnt{color:#767b82;}
+.dt-head .cnt b{color:#0068c3;}
+.dt-head .srch{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.dt-head .srch .box{width:230px;height:32px;background:#f5f6f7;border-radius:6px;display:flex;align-items:center;padding:0 10px;color:#9aa0a6;}
+.dt-head .srch .box input{flex:1;border:0;background:transparent;outline:none;font-size:12.5px;}
+.dt-title{display:flex;align-items:flex-start;gap:8px;padding:18px 24px 8px;}
+.dt-title .st{background:none;border:0;color:#d8dade;padding:0;margin-top:3px;display:flex;}
+.dt-title .st.on{color:#ffc400;}
+.dt-title h1{margin:0;font-size:16.5px;font-weight:700;color:#111;line-height:1.4;flex:1;}
+.dt-title .rt{display:flex;gap:9px;align-items:center;color:#666;font-size:12px;white-space:nowrap;}
+.dt-meta{padding:8px 24px 0;font-size:12.5px;color:#444;}
+.dt-meta .mrow{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.dt-meta .mrow .lb{width:64px;color:#666;display:flex;align-items:center;gap:4px;}
+.dt-meta .chip{border:1px solid #e3e5e8;border-radius:14px;padding:4px 11px;background:#fafbfc;font-size:12px;color:#333;}
+.dt-meta .date{color:#767b82;font-size:12px;padding:6px 0 0 76px;}
+.dt-content{padding:26px 26px 80px;font-size:13.5px;color:#222;line-height:1.75;}
+.dt-content h2{font-size:23px;font-weight:700;color:#111;margin:14px 0 22px;}
+.dt-content .att{margin:16px 0;}
+.dt-content .att img{max-width:640px;border-radius:6px;border:1px solid #eceef1;}
+.dt-content .blk{white-space:pre-wrap;}
+
+/* ===================================================================
+   모바일 버전 (화면 폭 640px 이하에서 PC 화면 대신 표시)
+=================================================================== */
+#m-app{display:none;}
+@media (max-width:640px){
+  html,body{overflow:hidden;}
+  .pc-only{display:none !important;}
+  #m-app{display:block;}
+}
+#m-app .mv{display:none;height:100vh;flex-direction:column;background:#f2f4f6;overflow:hidden;}
+#m-app .mv.on{display:flex;}
+.mi{background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;color:#222;position:relative;}
+.mi .bdg{position:absolute;top:-5px;right:-7px;min-width:15px;height:15px;padding:0 4px;background:#f44;color:#fff;
+  border-radius:8px;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.mham{width:22px;display:flex;flex-direction:column;gap:5px;}
+.mham span{display:block;height:2px;background:#222;border-radius:2px;}
+
+/* ---- 모바일 홈 ---- */
+.mh-top{height:54px;display:flex;align-items:center;gap:12px;padding:0 16px;flex:none;}
+.mpay{width:31px;height:31px;border:1px solid #dfe2e5;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#3a3a3a;background:#fff;}
+.mh-top .sp{flex:1;}
+.mh-body{flex:1;overflow-y:auto;padding:0 14px 86px;-webkit-overflow-scrolling:touch;}
+.msearch-wrap{position:relative;padding:26px 0 16px;}
+.msearch{height:54px;background:#fff;border-radius:27px;display:flex;align-items:center;gap:12px;padding:0 20px;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.msearch .nlogo{color:#03c75a;font-weight:900;font-size:20px;letter-spacing:-1px;}
+.msearch input{flex:1;min-width:0;border:0;outline:none;font-size:15px;background:transparent;}
+.msearch .dv{width:1px;height:18px;background:#e5e7ea;}
+.msearch .lens{color:#00b3c7;}
+.msearch .ai{color:#3b82f6;}
+.msugg{position:absolute;left:0;right:0;top:78px;background:#fff;border-radius:18px;box-shadow:0 8px 22px rgba(0,0,0,.14);
+  padding:8px 0 4px;z-index:40;}
+.msugg .h{display:flex;justify-content:space-between;padding:6px 18px 6px;font-size:12px;color:#8d9299;}
+.msugg .it{display:flex;align-items:center;gap:10px;padding:11px 18px;font-size:14.5px;color:#333;}
+.msugg .it .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.msugg .it .c{color:#c4c8cd;}
+.msugg .e{padding:16px 18px;color:#9aa0a6;font-size:13px;}
+.mcard{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;}
+.m-adcard{height:96px;border-radius:16px;margin-bottom:12px;}
+.minfo{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;}
+.minfo .c{flex:none;min-width:168px;height:74px;background:#fff;border-radius:16px;padding:14px 16px;
+  display:flex;flex-direction:column;justify-content:center;gap:4px;}
+.minfo .c .v{font-size:17px;font-weight:800;color:#111;display:flex;align-items:center;gap:6px;}
+.minfo .c .v .up{font-size:12px;color:#f04452;font-weight:700;}
+.minfo .c .s{font-size:12px;color:#8d9299;}
+.minfo .c .sun{width:22px;height:22px;border-radius:50%;background:#ffc93c;}
+.mband{background:#fff;border-radius:16px;padding:16px;text-align:center;font-size:13.5px;color:#333;margin-bottom:12px;}
+.mband b{color:#111;}
+.mfeed{display:flex;gap:10px;}
+.mfeed .f{flex:1;min-width:0;}
+.mfeed .f .ph{height:150px;border-radius:14px;}
+.mfeed .f .tt{font-size:13px;color:#222;margin-top:8px;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.mtab{height:62px;background:#fff;border-top:1px solid #eceef1;display:flex;align-items:center;flex:none;
+  padding-bottom:env(safe-area-inset-bottom);}
+.mtab button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:11px;color:#8d9299;}
+.mtab button.on{color:#111;font-weight:700;}
+.mtab .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#b0b5bb;}
+.mtab button.on .ic{background:#111;color:#fff;}
+
+/* ---- 모바일 메뉴(바로가기) ---- */
+.mm-top{height:58px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#fff;flex:none;}
+.mm-top .nm{font-size:20px;font-weight:800;color:#111;display:flex;align-items:center;gap:4px;}
+.mm-top .sp{flex:1;}
+.mm-top .cnt{min-width:26px;height:26px;border:1px solid #dcdee1;border-radius:6px;font-size:12px;color:#333;
+  display:flex;align-items:center;justify-content:center;}
+.mm-body{flex:1;overflow-y:auto;background:#fff;padding-bottom:30px;}
+.mm-sec{padding:18px 16px 6px;display:flex;align-items:center;}
+.mm-sec h4{margin:0;font-size:16px;font-weight:800;color:#111;flex:1;}
+.mm-sec .rt{font-size:12.5px;color:#767b82;}
+.mm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;padding:8px 10px 16px;}
+.mm-grid button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;}
+.mm-grid .ic{width:52px;height:52px;border-radius:15px;background:#fff;border:1px solid #f0f1f3;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.mm-grid .ic svg{width:52px;height:52px;}
+.mm-grid .lb{font-size:12.5px;color:#333;}
+.mm-grid .bg{position:absolute;top:-4px;right:12px;background:#03c75a;color:#fff;font-size:9.5px;font-weight:700;
+  border-radius:9px;padding:2px 6px;}
+.mm-line{height:8px;background:#f2f4f6;}
+.mm-news{padding:4px 16px 18px;}
+.mm-news .row{display:flex;align-items:center;gap:10px;padding:11px 0;font-size:13.5px;color:#333;}
+.mm-news .row .dot{width:26px;height:26px;border-radius:50%;background:#eaf7ee;color:#03c75a;flex:none;
+  display:flex;align-items:center;justify-content:center;}
+
+/* ---- 모바일 메일 목록 ---- */
+.ml-appbar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border-bottom:1px solid #f1f2f4;flex:none;}
+.ml-appbar .ic{width:44px;height:44px;border-radius:12px;background:#eaf7ee;display:flex;align-items:center;justify-content:center;flex:none;}
+.ml-appbar .tx{flex:1;font-size:13.5px;color:#333;line-height:1.45;}
+.ml-appbar .go{height:34px;padding:0 14px;border:0;border-radius:7px;background:#03c75a;color:#fff;font-size:13px;font-weight:700;}
+.ml-head{height:56px;display:flex;align-items:center;gap:12px;padding:0 14px;background:#fff;flex:none;}
+.ml-head .logo{color:#03c75a;font-weight:900;font-size:22px;background:none;border:0;padding:0;letter-spacing:-1px;}
+.ml-head .ti{flex:1;text-align:center;font-size:17px;font-weight:700;color:#111;}
+.ml-head .ti b{color:#0068c3;font-weight:700;}
+.ml-chips{display:flex;gap:8px;padding:6px 14px 12px;background:#fff;overflow-x:auto;flex:none;}
+.ml-chips .ch{flex:none;height:36px;padding:0 18px;border-radius:19px;border:1px solid #dcdee1;background:#fff;
+  font-size:13.5px;color:#444;position:relative;}
+.ml-chips .ch.on{border-color:#03c75a;color:#0b8b3f;font-weight:700;}
+.ml-chips .ch .dot{position:absolute;top:6px;right:8px;width:5px;height:5px;background:#03c75a;border-radius:50%;}
+.ml-body{flex:1;overflow-y:auto;background:#fff;-webkit-overflow-scrolling:touch;}
+.ml-ad{height:110px;margin:0 0 4px;border-radius:0;border-left:0;border-right:0;}
+.ml-row{display:flex;gap:10px;padding:14px 14px;border-bottom:1px solid #f4f5f6;}
+.ml-row .cb{width:19px;height:19px;border:1.5px solid #d8dade;border-radius:50%;flex:none;margin-top:2px;}
+.ml-row .ct{flex:1;min-width:0;}
+.ml-row .l1{display:flex;align-items:center;gap:8px;}
+.ml-row .fr{flex:1;min-width:0;font-size:14.5px;color:#767b82;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ml-row .tm{font-size:12.5px;color:#8d9299;white-space:nowrap;}
+.ml-row .l2{display:flex;align-items:flex-end;gap:10px;margin-top:5px;}
+.ml-row .sj{flex:1;min-width:0;font-size:14.5px;color:#767b82;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.ml-row .st{color:#d8dade;flex:none;background:none;border:0;padding:0;}
+.ml-row .st.on{color:#ffc400;}
+.ml-row.unread .fr,.ml-row.unread .sj{color:#111;font-weight:700;}
+.ml-empty{padding:70px 0;text-align:center;color:#9aa0a6;font-size:14px;}
+.mfab{position:absolute;right:18px;bottom:24px;width:56px;height:56px;border-radius:50%;background:#03c75a;color:#fff;
+  border:0;box-shadow:0 4px 14px rgba(3,199,90,.4);display:flex;align-items:center;justify-content:center;z-index:20;}
+
+/* ---- 모바일 메일 상세 ---- */
+.md-head{height:54px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#fff;border-bottom:1px solid #f1f2f4;flex:none;}
+.md-head .bk{background:none;border:0;display:flex;align-items:center;gap:4px;font-size:15px;color:#111;font-weight:700;padding:0;}
+.md-head .sp{flex:1;}
+.md-body{flex:1;overflow-y:auto;background:#fff;padding:18px 16px 60px;-webkit-overflow-scrolling:touch;}
+.md-body h1{margin:0 0 14px;font-size:19px;font-weight:700;color:#111;line-height:1.4;}
+.md-from{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #f1f2f4;border-bottom:1px solid #f1f2f4;}
+.md-from .av{width:38px;height:38px;border-radius:50%;background:#eaf7ee;color:#03c75a;display:flex;align-items:center;
+  justify-content:center;flex:none;font-weight:800;font-size:15px;}
+.md-from .i2{flex:1;min-width:0;display:block;}
+.md-from .n1{display:block;font-size:14px;font-weight:700;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.md-from .n2{display:block;font-size:12px;color:#8d9299;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.md-from .dt{font-size:12px;color:#8d9299;white-space:nowrap;}
+.md-cont{padding-top:18px;font-size:14.5px;color:#222;line-height:1.75;}
+.md-cont h2{font-size:20px;font-weight:700;color:#111;margin:10px 0 18px;}
+.md-cont .blk{white-space:pre-wrap;}
+.md-cont .att img{max-width:100%;border-radius:8px;border:1px solid #eceef1;margin:14px 0;}
+
+/* ---- 모바일 메일 서랍 ---- */
+#mv-drawer{position:fixed;inset:0;background:#fff;z-index:120;display:none;flex-direction:column;}
+#mv-drawer.on{display:flex;}
+.dw-top{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;flex:none;}
+.dw-top .av{width:56px;height:56px;border-radius:50%;background:#eceef1;overflow:hidden;color:#b9bec4;
+  display:flex;align-items:center;justify-content:center;flex:none;}
+.dw-top .av img{width:100%;height:100%;object-fit:cover;}
+.dw-top .in{flex:1;min-width:0;display:block;}
+.dw-top .n1{font-size:17px;font-weight:700;color:#111;display:flex;align-items:center;gap:3px;}
+.dw-top .n2{display:block;font-size:13px;color:#8d9299;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dw-quick{display:flex;padding:10px 6px 18px;border-bottom:1px solid #f1f2f4;flex:none;}
+.dw-quick .q{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-size:12.5px;color:#767b82;}
+.dw-quick .q .v{font-size:19px;font-weight:800;color:#0068c3;}
+.dw-quick .q .ic{color:#4a5058;height:24px;display:flex;align-items:center;}
+.dw-list{flex:1;overflow-y:auto;padding-bottom:30px;}
+.dw-nv{width:100%;display:flex;align-items:center;gap:12px;padding:15px 16px;background:none;border:0;
+  font-size:15.5px;color:#222;text-align:left;}
+.dw-nv .ic{color:#4a5058;flex:none;display:flex;}
+.dw-nv .lb{flex:1;}
+.dw-nv .n{color:#0068c3;font-weight:700;margin-left:4px;}
+.dw-nv.on{background:#eef4ff;color:#1b64da;font-weight:700;border-radius:10px;}
+.dw-nv.on .ic{color:#1b64da;}
+.dw-nv.on .n{color:#1b64da;}
+.dw-nv .tag{font-size:12.5px;border:1px solid #dcdee1;border-radius:7px;padding:5px 10px;color:#555;}
+.dw-nv.sub{padding-left:34px;font-size:15px;color:#333;}
+.dw-sep{height:1px;background:#f1f2f4;margin:6px 16px;}
+
+@media (max-width:640px){
+  .vp-card{width:auto;max-width:86vw;}
+  .adm-wrap{inset:8px;flex-direction:column;}
+  .adm-left{width:auto;max-height:46%;border-right:0;border-bottom:1px solid #eceef1;}
+  .adm-newlist{flex-direction:row;flex-wrap:wrap;}
+  .adm-newlist input{flex:1;min-width:84px;}
+  .adm-left .lfoot{flex-direction:row;flex-wrap:wrap;}
+  .adm-left .lfoot button{flex:1;min-width:120px;}
+  .fgrid{grid-template-columns:1fr;gap:6px;}
+  .ad-row{flex-wrap:wrap;}
+}
+
+/* ============ 관리자 패널 ============ */
+#admin{position:fixed;inset:0;background:rgba(20,22,26,.45);z-index:200;display:none;}
+#admin.on{display:block;}
+.adm-wrap{position:absolute;inset:26px;background:#fff;border-radius:12px;display:flex;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.adm-left{width:296px;border-right:1px solid #eceef1;display:flex;flex-direction:column;background:#fafbfc;}
+.adm-left h3{margin:0;padding:16px 16px 10px;font-size:14px;color:#111;}
+.adm-newlist{padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #eceef1;}
+.adm-newlist input{height:30px;border:1px solid #dcdee1;border-radius:5px;padding:0 8px;font-size:12px;outline:none;}
+.adm-newlist button{height:32px;border:0;border-radius:5px;background:#03c75a;color:#fff;font-size:12.5px;font-weight:700;}
+.adm-lists{flex:1;overflow-y:auto;padding:8px 6px 20px;}
+.adm-item{width:100%;text-align:left;border:1px solid transparent;border-radius:7px;background:none;padding:8px 8px 8px 10px;
+  font-size:12.5px;color:#333;display:flex;align-items:center;gap:6px;}
+.adm-item:hover{background:#f0f1f3;}
+.adm-item.on{background:#eaf7ee;border-color:#a8e0bf;color:#0b6d34;font-weight:700;}
+.adm-item .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.adm-item .del{border:0;background:none;color:#b9bec4;display:flex;}
+.adm-item .del:hover{color:#f44;}
+
+/* 리스트 폴더 트리 */
+.tree-empty{padding:16px 10px;color:#9aa0a6;font-size:12px;}
+.fold{margin-bottom:2px;}
+.fold .fh{width:100%;display:flex;align-items:center;gap:5px;background:none;border:0;border-radius:7px;
+  padding:7px 6px 7px 8px;font-size:12.5px;color:#222;text-align:left;}
+.fold .fh:hover{background:#eef0f2;}
+.fold .fh .cv{color:#9aa0a6;display:flex;transition:transform .15s;}
+.fold .fh.closed .cv{transform:rotate(-90deg);}
+.fold .fh .fi{color:#f0b429;display:flex;}
+.fold .fh .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.fold .fh .ct{font-size:10.5px;color:#8d9299;font-weight:400;background:#fff;border:1px solid #e3e5e8;border-radius:9px;padding:1px 6px;}
+.fold .fh .acts{display:none;gap:2px;}
+.fold .fh:hover .acts{display:flex;}
+.fold .fh .acts span{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#8d9299;}
+.fold .fh .acts span:hover{background:#dfe2e5;color:#333;}
+.fold .fh .acts span.rm:hover{background:#fdeaea;color:#e04b4b;}
+.fold.lv2 .fh .fi{color:#9ccfb0;}
+.fold.lv2 .fh .nm{font-weight:600;color:#3a4149;}
+.fold-body{padding-left:14px;border-left:1px dashed #e0e3e6;margin-left:12px;}
+.fold-body.closed{display:none;}
+.leaf-cnt{font-size:10.5px;color:#9aa0a6;font-weight:400;}
+.adm-left .lfoot{padding:10px 12px 14px;border-top:1px solid #eceef1;display:flex;flex-direction:column;gap:6px;}
+.adm-left .lfoot button{height:32px;border:1px solid #dcdee1;border-radius:6px;background:#fff;font-size:12.5px;color:#333;}
+.adm-left .lfoot .prim{background:#222;color:#fff;border-color:#222;font-weight:700;}
+
+.adm-right{flex:1;display:flex;flex-direction:column;min-width:0;}
+.adm-top{height:52px;border-bottom:1px solid #eceef1;display:flex;align-items:center;padding:0 18px;gap:12px;flex:none;}
+.adm-top .ti{font-size:14px;font-weight:700;color:#111;}
+.adm-top .sub{font-size:12px;color:#8d9299;}
+.adm-top .cl{margin-left:auto;width:30px;height:30px;border:1px solid #dcdee1;border-radius:6px;background:#fff;color:#555;
+  display:inline-flex;align-items:center;justify-content:center;}
+.adm-scroll{flex:1;overflow-y:auto;padding:18px 18px 60px;}
+.adm-sec{border:1px solid #eceef1;border-radius:10px;margin-bottom:16px;}
+.adm-sec>h4{margin:0;padding:12px 14px;font-size:13px;color:#111;border-bottom:1px solid #f1f2f4;background:#fafbfc;
+  border-radius:10px 10px 0 0;display:flex;align-items:center;gap:8px;}
+.adm-sec>h4 .hint{font-weight:400;color:#8d9299;font-size:11.5px;}
+.adm-sec .in{padding:14px;}
+.fgrid{display:grid;grid-template-columns:110px 1fr;gap:10px 12px;align-items:center;}
+.fgrid label{font-size:12.5px;color:#555;}
+.fgrid input[type=text],.fgrid input[type=email],.fgrid input[type=datetime-local],.fgrid textarea,.fgrid select{
+  width:100%;border:1px solid #dcdee1;border-radius:6px;padding:7px 9px;font-size:12.5px;outline:none;font-family:inherit;}
+.fgrid textarea{min-height:120px;resize:vertical;line-height:1.6;}
+.fgrid input:focus,.fgrid textarea:focus{border-color:#03c75a;}
+.thumb-prev{display:flex;align-items:center;gap:10px;}
+.thumb-prev .box{width:52px;height:52px;border-radius:8px;border:1px solid #e3e5e8;background:#f7f8fa;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#c4c8cd;}
+.thumb-prev .box img{width:100%;height:100%;object-fit:cover;}
+.mini-btn{height:28px;padding:0 10px;border:1px solid #dcdee1;border-radius:5px;background:#fff;font-size:12px;color:#333;}
+.mini-btn.g{background:#03c75a;border-color:#03c75a;color:#fff;font-weight:700;}
+.mini-btn.r{color:#e04b4b;}
+.srow{display:flex;gap:8px;margin-bottom:8px;}
+.srow input{flex:1;border:1px solid #dcdee1;border-radius:6px;padding:7px 9px;font-size:12.5px;outline:none;}
+.mail-editor{border:1px solid #e9ebee;border-radius:8px;margin-bottom:12px;}
+.mail-editor .me-h{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fafbfc;border-bottom:1px solid #f1f2f4;
+  border-radius:8px 8px 0 0;font-size:12.5px;color:#333;cursor:pointer;}
+.mail-editor .me-h .idx{width:20px;height:20px;border-radius:50%;background:#e3e5e8;color:#555;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex:none;}
+.mail-editor .me-h .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mail-editor .me-b{padding:12px;display:none;}
+.mail-editor.open .me-b{display:block;}
+.chkline{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#444;}
+.adm-hint{font-size:12px;color:#8d9299;line-height:1.6;background:#fafbfc;border:1px dashed #e3e5e8;border-radius:8px;
+  padding:10px 12px;margin-bottom:16px;}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:34px;background:rgba(20,22,26,.9);color:#fff;padding:10px 18px;
+  border-radius:20px;font-size:12.5px;z-index:400;opacity:0;transition:opacity .2s;pointer-events:none;}
+.toast.on{opacity:1;}
+
+/* 배포 버전 안내 팝업 */
+#verPop{position:fixed;inset:0;background:rgba(20,22,26,.42);z-index:500;display:none;align-items:center;justify-content:center;}
+#verPop.on{display:flex;}
+.vp-card{width:342px;background:#fff;border-radius:14px;padding:26px 24px 18px;box-shadow:0 14px 44px rgba(0,0,0,.28);text-align:center;}
+.vp-card .vp-ic{width:46px;height:46px;border-radius:14px;background:#eaf7ee;color:#03c75a;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.vp-card h3{margin:0 0 7px;font-size:16px;color:#111;}
+.vp-card p{margin:0 0 18px;font-size:12.5px;color:#767b82;line-height:1.6;}
+.vp-card button{width:100%;height:40px;border:0;border-radius:8px;background:#03c75a;color:#fff;font-size:13.5px;font-weight:700;}
+.adm-left .lfoot .seed{background:#0b8b3f;border-color:#0b8b3f;color:#fff;font-weight:700;}
+.adm-left .lfoot .vinfo{font-size:11px;color:#9aa0a6;text-align:center;padding-top:2px;line-height:1.5;}
+
+/* 관리자 : 광고 이미지 목록 */
+.ad-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f4f5f6;}
+.ad-row:last-of-type{border-bottom:0;}
+.ad-row .no{width:46px;flex:none;font-size:11px;font-weight:800;color:#0b8b3f;background:#eaf7ee;border-radius:5px;
+  padding:3px 0;text-align:center;}
+.ad-row .ds{flex:1;min-width:0;font-size:12.5px;color:#333;}
+.ad-row .ds em{display:block;font-style:normal;font-size:11px;color:#9aa0a6;margin-top:2px;}
+.ad-row .pv{width:64px;height:40px;flex:none;border:1px solid #e3e5e8;border-radius:6px;background:#f7f8fa;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;color:#c4c8cd;}
+.ad-row .pv img{max-width:100%;max-height:100%;object-fit:contain;}
+.ad-row input[type=file]{width:168px;flex:none;font-size:11px;}
+.ad-row select{height:28px;border:1px solid #dcdee1;border-radius:5px;font-size:11.5px;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<!-- =================== SVG 아이콘 정의 (직접 드로잉) =================== -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
+
+  <!-- ===== 홈 숏컷 아이콘 (배경 포함 40x40) ===== -->
+  <symbol id="sc-mail" viewBox="0 0 40 40">
+    <rect width="40" height="40" rx="11" fill="#1EC800"/>
+    <rect x="8.5" y="12.5" width="23" height="15.4" rx="2.6" fill="#fff"/>
+    <path d="M10.2 14.6 20 21.5l9.8-6.9" fill="none" stroke="#1EC800" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="sc-cafe" viewBox="0 0 40 40">
+    <rect x=".5" y=".5" width="39" height="39" rx="10.5" fill="#fff" stroke="#e9ebee"/>
+    <path d="M10.6 15.4h13.2v5.9a6.6 6.6 0 0 1-13.2 0v-5.9z" fill="#03C75A"/>
+    <path d="M24.6 17.1h1.3a3.3 3.3 0 0 1 0 6.6h-1.3" fill="none" stroke="#03C75A" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M8.8 30.2h17.6" stroke="#03C75A" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M17.6 12.6c1.7-1 1.7-2.3.5-3.4" fill="none" stroke="#a5dcba" stroke-width="1.6" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sc-blog" viewBox="0 0 40 40">
+    <rect x=".5" y=".5" width="39" height="39" rx="10.5" fill="#fff" stroke="#e9ebee"/>
+    <path d="M13.1 9.8v18.4" stroke="#03C75A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="18.6" cy="22.6" r="5.5" fill="none" stroke="#03C75A" stroke-width="3"/>
+    <path d="M27 11.6v16.6" stroke="#03C75A" stroke-width="2.6" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sc-shop" viewBox="0 0 40 40">
+    <rect width="40" height="40" rx="11" fill="#7C3AED"/>
+    <path d="M9 12.6h4.3l4 6.4v-6.4h4.2v14.8h-4.3l-4-6.4v6.4H9z" fill="#fff"/>
+    <rect x="23.6" y="17.4" width="9.4" height="2.7" rx="1.35" fill="#fff"/>
+    <rect x="26.95" y="14.05" width="2.7" height="9.4" rx="1.35" fill="#fff"/>
+  </symbol>
+  <symbol id="sc-news" viewBox="0 0 40 40">
+    <rect x=".5" y=".5" width="39" height="39" rx="10.5" fill="#fff" stroke="#e9ebee"/>
+    <rect x="8.6" y="11.6" width="22.8" height="16.8" rx="2.4" fill="none" stroke="#454C57" stroke-width="1.9"/>
+    <rect x="11.6" y="14.7" width="7.4" height="6.2" rx="1" fill="#1C6FF3"/>
+    <path d="M21.4 15.6h7M21.4 19.4h7M11.6 24.5h16.8" stroke="#454C57" stroke-width="1.7" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sc-stock" viewBox="0 0 40 40">
+    <rect x=".5" y=".5" width="39" height="39" rx="10.5" fill="#fff" stroke="#e9ebee"/>
+    <path d="M9.4 26.6l6.2-6.4 4.1 3.6 9.4-9.8" fill="none" stroke="#E8443A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M24.2 13.4h5.4v5.4" fill="none" stroke="#E8443A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="sc-realty" viewBox="0 0 40 40">
+    <rect width="40" height="40" rx="11" fill="#00C36F"/>
+    <path d="M20 9.6 32.4 20h-3.6v10.4H11.2V20H7.6L20 9.6z" fill="#fff"/>
+    <rect x="17.4" y="22.4" width="5.2" height="8" rx=".6" fill="#00C36F"/>
+  </symbol>
+  <symbol id="sc-map" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="15.4" fill="#1D74F5"/>
+    <path d="M13.6 12.8h4.1l4.2 6.7v-6.7h4V27h-4.1l-4.2-6.7V27h-4z" fill="#fff"/>
+  </symbol>
+  <symbol id="sc-webtoon" viewBox="0 0 40 40">
+    <rect width="40" height="40" rx="11" fill="#05412A"/>
+    <text x="20" y="19.2" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="8.4" font-weight="800"
+      fill="#fff" letter-spacing="-.4">WEB</text>
+    <text x="20" y="28.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="8.4" font-weight="800"
+      fill="#fff" letter-spacing="-.4">TOON</text>
+  </symbol>
+  <symbol id="sc-chzzk" viewBox="0 0 40 40">
+    <rect width="40" height="40" rx="11" fill="#141517"/>
+    <path d="M12.6 11.4h15.2v4.1L19.9 24h7.9v4.6H12.2v-4.1l7.9-8.5h-7.5z" fill="#00E24A"/>
+  </symbol>
+  <symbol id="sc-more" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="15.4" fill="#F0F1F3"/>
+    <circle cx="13.4" cy="20" r="2" fill="#767B82"/><circle cx="20" cy="20" r="2" fill="#767B82"/>
+    <circle cx="26.6" cy="20" r="2" fill="#767B82"/>
+  </symbol>
+
+  <!-- ===== 메일 상단 서비스 아이콘 ===== -->
+  <symbol id="app-mail" viewBox="0 0 24 24">
+    <rect x="3.2" y="6.2" width="17.6" height="11.6" rx="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M4.6 8.2 12 13.6l7.4-5.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="app-cal" viewBox="0 0 24 24">
+    <rect x="3.4" y="5" width="17.2" height="15" rx="2.6" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M3.4 9.6h17.2" stroke="currentColor" stroke-width="2"/>
+    <text x="12" y="18" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="7.4" font-weight="800"
+      fill="currentColor">31</text>
+  </symbol>
+  <symbol id="app-cloud" viewBox="0 0 24 24">
+    <path d="M7.6 18.4h9.2a3.9 3.9 0 0 0 .5-7.8 5.6 5.6 0 0 0-10.7.7 3.6 3.6 0 0 0 1 7.1z" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="app-contact" viewBox="0 0 24 24">
+    <circle cx="12" cy="9.2" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M5.6 19.6c1.2-3.4 3.6-5 6.4-5s5.2 1.6 6.4 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="app-box" viewBox="0 0 24 24">
+    <rect x="3.6" y="6.6" width="16.8" height="12.8" rx="2.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M3.6 11h16.8" stroke="currentColor" stroke-width="2"/>
+    <path d="M9.8 11v3.2h4.4V11" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="app-todo" viewBox="0 0 24 24">
+    <rect x="4.2" y="4.2" width="15.6" height="15.6" rx="3.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M8.4 12.2l2.7 2.7 4.7-5.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="app-w" viewBox="0 0 24 24">
+    <path d="M3.6 6.4l3 11.2 3.4-8 3.4 8 3-11.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round"/>
+    <path d="M17.8 6.4l2.6 11.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="app-flag" viewBox="0 0 24 24">
+    <path d="M6.6 4.4h10.8v15.2L12 15.2 6.6 19.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- ===== 공통 UI 아이콘 ===== -->
+  <symbol id="ui-bell" viewBox="0 0 24 24">
+    <path d="M12 3.2a5.8 5.8 0 0 0-5.8 5.8v3.4L4.4 16h15.2l-1.8-3.6V9A5.8 5.8 0 0 0 12 3.2z" fill="none" stroke="currentColor"
+      stroke-width="1.9" stroke-linejoin="round"/>
+    <path d="M9.6 18.2a2.5 2.5 0 0 0 4.8 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-cart" viewBox="0 0 24 24">
+    <path d="M3 4.6h2.6l2.6 9.8h9.4l2.4-7.2H6.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+      stroke-linejoin="round"/>
+    <circle cx="9.4" cy="19" r="1.8" fill="currentColor"/><circle cx="17.2" cy="19" r="1.8" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-kb" viewBox="0 0 24 24">
+    <rect x="2.6" y="6.4" width="18.8" height="11.2" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    <path d="M6 9.8h.01M9.4 9.8h.01M12.8 9.8h.01M16.2 9.8h.01M19 9.8h.01M6 13h.01M9.4 13h.01M12.8 13h.01M16.2 13h.01M19 13h.01"
+      stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M8 15.8h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-send" viewBox="0 0 24 24">
+    <path d="M21 3.6 2.8 10.9l7.3 2.9 2.9 7.3z" fill="currentColor"/>
+    <path d="M21 3.6 10.1 13.8" fill="none" stroke="#f0f8ff" stroke-width="1.4"/>
+  </symbol>
+  <symbol id="ui-plane" viewBox="0 0 24 24">
+    <path d="M21 3.6 2.8 10.9l7.3 2.9 2.9 7.3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M21 3.6 10.1 13.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-search" viewBox="0 0 24 24">
+    <circle cx="10.6" cy="10.6" r="6.4" fill="none" stroke="currentColor" stroke-width="1.9"/>
+    <path d="M15.4 15.4 20.4 20.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-clock" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M12 7.4V12l3.4 2.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-x" viewBox="0 0 24 24">
+    <path d="M5.6 5.6 18.4 18.4M18.4 5.6 5.6 18.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-person" viewBox="0 0 24 24">
+    <circle cx="12" cy="8.6" r="3.9" fill="currentColor"/>
+    <path d="M4.4 21c.9-4.4 4-6.6 7.6-6.6s6.7 2.2 7.6 6.6z" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-gear" viewBox="0 0 24 24">
+    <path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M19.2 14.2a7.6 7.6 0 0 0 0-4.4l2-1.4-1.9-3.3-2.3.9a7.6 7.6 0 0 0-3.8-2.2L12.8 1h-3.8l-.4 2.8A7.6 7.6 0 0 0 4.8 6L2.5 5.1.6 8.4l2 1.4a7.6 7.6 0 0 0 0 4.4l-2 1.4 1.9 3.3 2.3-.9a7.6 7.6 0 0 0 3.8 2.2l.4 2.8h3.8l.4-2.8a7.6 7.6 0 0 0 3.8-2.2l2.3.9 1.9-3.3z"
+      fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-up" viewBox="0 0 24 24">
+    <path d="M12 19V5.4M5.6 11.6 12 5.2l6.4 6.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+      stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-chev-l" viewBox="0 0 24 24"><path d="M15 4.6 7.4 12l7.6 7.4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ui-chev-r" viewBox="0 0 24 24"><path d="M9 4.6 16.6 12 9 19.4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ui-chev-d" viewBox="0 0 24 24"><path d="M4.8 8.6 12 15.8l7.2-7.2" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ui-chev-u" viewBox="0 0 24 24"><path d="M4.8 15.4 12 8.2l7.2 7.2" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ui-dchev-l" viewBox="0 0 24 24">
+    <path d="M12.6 5.6 6.8 12l5.8 6.4M19 5.6 13.2 12l5.8 6.4" fill="none" stroke="currentColor" stroke-width="1.9"
+      stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-dchev-r" viewBox="0 0 24 24">
+    <path d="M11.4 5.6 17.2 12l-5.8 6.4M5 5.6 10.8 12 5 18.4" fill="none" stroke="currentColor" stroke-width="1.9"
+      stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-star" viewBox="0 0 24 24">
+    <path d="M12 3.6l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1-5.4-3-5.4 3 1.1-6.1L3.2 10l6.1-.8z" fill="none" stroke="currentColor"
+      stroke-width="1.7" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-star-on" viewBox="0 0 24 24">
+    <path d="M12 3.6l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1-5.4-3-5.4 3 1.1-6.1L3.2 10l6.1-.8z" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-env-closed" viewBox="0 0 24 24">
+    <rect x="2.4" y="5.4" width="19.2" height="13.2" rx="2.4" fill="currentColor"/>
+    <path d="M3.8 7.4 12 13.2l8.2-5.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-env-open" viewBox="0 0 24 24">
+    <path d="M2.8 10.6 12 4.2l9.2 6.4v8.2a1.6 1.6 0 0 1-1.6 1.6H4.4a1.6 1.6 0 0 1-1.6-1.6z" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M2.8 10.6 12 16.4l9.2-5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-clip" viewBox="0 0 24 24">
+    <path d="M17.6 9 10 16.6a3.4 3.4 0 0 1-4.8-4.8l7.6-7.6a2.4 2.4 0 0 1 3.4 3.4l-7.6 7.6" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-ext" viewBox="0 0 24 24">
+    <path d="M14 4.6h5.4V10M19.4 4.6 11 13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
+      stroke-linejoin="round"/>
+    <path d="M18 14.6v3.8a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 18.4V8a1.8 1.8 0 0 1 1.8-1.8h3.8" fill="none"
+      stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-print" viewBox="0 0 24 24">
+    <path d="M7 8.6V4h10v4.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <rect x="3.4" y="8.6" width="17.2" height="7.6" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M7 14h10v6H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-chat" viewBox="0 0 24 24">
+    <path d="M12 4C7 4 3 7.1 3 11c0 2.3 1.4 4.3 3.6 5.6L6 20.4l4.1-2.1c.6.1 1.2.2 1.9.2 5 0 9-3.1 9-7s-4-7.5-9-7.5z"
+      fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-grid" viewBox="0 0 24 24">
+    <circle cx="6" cy="6" r="1.9" fill="currentColor"/><circle cx="12" cy="6" r="1.9" fill="currentColor"/>
+    <circle cx="18" cy="6" r="1.9" fill="currentColor"/><circle cx="6" cy="12" r="1.9" fill="currentColor"/>
+    <circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="18" cy="12" r="1.9" fill="currentColor"/>
+    <circle cx="6" cy="18" r="1.9" fill="currentColor"/><circle cx="12" cy="18" r="1.9" fill="currentColor"/>
+    <circle cx="18" cy="18" r="1.9" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-chk" viewBox="0 0 24 24">
+    <rect x="3.6" y="3.6" width="16.8" height="16.8" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/>
+  </symbol>
+  <symbol id="ui-lock" viewBox="0 0 24 24">
+    <rect x="5.4" y="10.4" width="13.2" height="9.6" rx="2.2" fill="currentColor"/>
+    <path d="M8.4 10.4V8a3.6 3.6 0 0 1 7.2 0v2.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-inbox" viewBox="0 0 24 24">
+    <path d="M3.4 13.4 6 5h12l2.6 8.4v4.2a1.8 1.8 0 0 1-1.8 1.8H5.2a1.8 1.8 0 0 1-1.8-1.8z" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M3.4 13.4h4.4l1 2.2h6.4l1-2.2h4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-mailall" viewBox="0 0 24 24">
+    <rect x="2.6" y="6" width="18.8" height="12.6" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M4 7.8 12 13.4l8-5.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-usercheck" viewBox="0 0 24 24">
+    <circle cx="10.4" cy="8.4" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M3.6 20c.9-3.8 3.6-5.6 6.8-5.6 1 0 2 .2 2.9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M14.6 17.6l2.2 2.2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-doc" viewBox="0 0 24 24">
+    <path d="M6 3.4h8l4.4 4.4V20.6H6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M13.8 3.6v4.4h4.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-pencil" viewBox="0 0 24 24">
+    <path d="M4.4 19.6h4l11-11a2.6 2.6 0 0 0-3.7-3.7l-11 11z" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linejoin="round"/>
+    <path d="M13.8 6.2l4 4" stroke="currentColor" stroke-width="1.8"/>
+  </symbol>
+  <symbol id="ui-folder" viewBox="0 0 24 24">
+    <path d="M3.4 6.4a1.8 1.8 0 0 1 1.8-1.8h4l2 2.6h7.6a1.8 1.8 0 0 1 1.8 1.8v9.4a1.8 1.8 0 0 1-1.8 1.8H5.2a1.8 1.8 0 0 1-1.8-1.8z"
+      fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-folders" viewBox="0 0 24 24">
+    <path d="M2.6 8.6h8.2l1.6 2h8.9v8.8a1.6 1.6 0 0 1-1.6 1.6H4.2a1.6 1.6 0 0 1-1.6-1.6z" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M5.4 8.6V5.4a1.6 1.6 0 0 1 1.6-1.6h4l1.6 2h4.8a1.6 1.6 0 0 1 1.6 1.6v1.2" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-trash" viewBox="0 0 24 24">
+    <path d="M4.6 6.6h14.8M9.4 6.6V4.4h5.2v2.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+      stroke-linejoin="round"/>
+    <path d="M6.4 6.6l1 12.2a1.8 1.8 0 0 0 1.8 1.6h5.6a1.8 1.8 0 0 0 1.8-1.6l1-12.2" fill="none" stroke="currentColor"
+      stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-img" viewBox="0 0 24 24">
+    <rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <circle cx="9" cy="10" r="1.8" fill="currentColor"/>
+    <path d="M4.6 17.4l4.8-5 3.4 3.4 3-2.6 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-bang" viewBox="0 0 24 24">
+    <rect x="9.9" y="3.6" width="4.2" height="11.4" rx="2.1" fill="currentColor"/>
+    <circle cx="12" cy="19" r="2.4" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-to" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <text x="12" y="15.4" text-anchor="middle" font-family="Helvetica,Arial,sans-serif" font-size="8.4" font-weight="800"
+      fill="currentColor">TO</text>
+  </symbol>
+  <symbol id="ui-list" viewBox="0 0 24 24">
+    <path d="M4 6.6h16M4 12h16M4 17.4h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-thumbs" viewBox="0 0 24 24">
+    <rect x="3.6" y="3.6" width="7.2" height="7.2" rx="1.4" fill="currentColor"/>
+    <rect x="13.2" y="3.6" width="7.2" height="7.2" rx="1.4" fill="currentColor"/>
+    <rect x="3.6" y="13.2" width="7.2" height="7.2" rx="1.4" fill="currentColor"/>
+    <rect x="13.2" y="13.2" width="7.2" height="7.2" rx="1.4" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-live" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3" fill="currentColor"/>
+    <path d="M6.6 6.6a7.6 7.6 0 0 0 0 10.8M17.4 6.6a7.6 7.6 0 0 1 0 10.8" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round"/>
+  </symbol>
+  <symbol id="ui-leaf" viewBox="0 0 24 24">
+    <path d="M20 4c-8 0-13 4-13 10 0 2 .6 3.6 1.6 4.8C10 16 13 12.6 18 11c-4 2.6-6.6 5.6-8 9.6h2.4C14 15 17 10 20 4z" fill="currentColor"/>
+  </symbol>
+  <symbol id="ui-logout" viewBox="0 0 24 24">
+    <path d="M14 4.6H6.4A1.8 1.8 0 0 0 4.6 6.4v11.2A1.8 1.8 0 0 0 6.4 19.4H14" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round"/>
+    <path d="M13.6 12h6.6M17.4 8.6l3.4 3.4-3.4 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+      stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="ui-refresh" viewBox="0 0 24 24">
+    <path d="M19.4 12a7.4 7.4 0 1 1-2.2-5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M17.6 3.6v3.6H14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M12 8.2V12l2.8 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+</defs></svg>
+
+<!-- ===================== 화면 1 : 네이버 메인 ===================== -->
+<div id="screen-home" class="screen on pc-only">
+  <div class="gnb">
+    <button class="ham" aria-label="메뉴"><span></span><span></span><span></span></button>
+    <div class="pay-logo">pay</div>
+    <div class="gnb-right">
+      <button class="ico-btn"><svg class="i i20"><use href="#ui-bell"/></svg><span class="badge">10</span></button>
+      <button class="ico-btn"><svg class="i i20"><use href="#ui-cart"/></svg><span class="badge">4</span></button>
+    </div>
+  </div>
+
+  <div class="search-zone">
+    <div class="search-box">
+      <input id="searchInput" type="text" placeholder="검색어를 입력해 주세요." autocomplete="off">
+      <button class="kb-ico"><svg class="i i18"><use href="#ui-kb"/></svg></button>
+      <button class="ai-btn"><svg class="i i15"><use href="#ui-send"/></svg>AI</button>
+    </div>
+    <div id="sugg" class="sugg hide"></div>
+  </div>
+
+  <div class="shortcut-row">
+    <button class="sc" onclick="goMail()"><svg class="ic"><use href="#sc-mail"/></svg><span class="lb">메일</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-cafe"/></svg><span class="lb">카페</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-blog"/></svg><span class="lb">블로그</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-shop"/></svg><span class="lb">쇼핑</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-news"/></svg><span class="lb">뉴스</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-stock"/></svg><span class="lb">증권</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-realty"/></svg><span class="lb">부동산</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-map"/></svg><span class="lb">지도</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-webtoon"/></svg><span class="lb">웹툰</span></button>
+    <button class="sc"><svg class="ic"><use href="#sc-chzzk"/></svg><span class="lb">치지직</span></button>
+    <button class="sc" style="width:46px"><svg class="ic"><use href="#sc-more"/></svg></button>
+  </div>
+
+  <div class="home-wrap">
+    <!-- 좌측 -->
+    <div class="col-left">
+      <div class="banner-top ad-slot" data-ad="1"></div>
+
+      <div class="card news-card">
+        <div class="news-tabs">
+          <button class="tb on">뉴스스탠드 <small>· 언론사편집</small></button>
+          <button class="tb">엔터</button>
+          <button class="tb">쇼핑투데이</button>
+          <button class="tb">스포츠<span class="live"><svg class="i i10"><use href="#ui-live"/></svg>LIVE</span></button>
+          <button class="tb">게임</button>
+          <button class="tb">경제</button>
+          <span class="games">Aichi-Nagoya 2026</span>
+        </div>
+        <div class="news-head">
+          <span class="dd">전체언론사 <svg class="i i11"><use href="#ui-chev-d"/></svg></span>
+          <span class="press">· 연합뉴스 ·</span>
+          <span class="hl" id="tickerLine" onclick="rotateTicker()"></span>
+          <span class="rt"><b>뉴스스탠드</b><span>뉴스홈</span></span>
+        </div>
+        <div id="pressGrid" class="press-grid"></div>
+        <div id="newsList" class="news-list hide"></div>
+        <div class="news-foot">
+          <button class="arw"><svg class="i i11"><use href="#ui-chev-l"/></svg></button>
+          <span class="more" id="newsFootLabel">언론사 더보기 <i>1/4</i></span>
+          <button class="arw"><svg class="i i11"><use href="#ui-chev-r"/></svg></button>
+          <div class="vw">
+            <button id="vwList" onclick="setNewsView('list')"><svg class="i i12"><use href="#ui-list"/></svg></button>
+            <button id="vwGrid" class="on" onclick="setNewsView('grid')"><svg class="i i12"><use href="#ui-thumbs"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 우측 -->
+    <div class="col-right">
+      <div class="card login-card">
+        <div class="lc-top">
+          <div class="avatar" id="homeAvatar"></div>
+          <div class="lc-info">
+            <div class="l1">
+              <span class="nm" id="homeName">사용자님</span>
+              <span class="nid">네이버ID <svg class="i i11"><use href="#ui-lock"/></svg></span>
+            </div>
+            <div class="em" id="homeEmail">-</div>
+          </div>
+          <button class="logout">로그아웃 <svg class="i i13"><use href="#ui-logout"/></svg></button>
+        </div>
+        <div class="lc-sub">
+          <span class="chip"><span class="sq">N</span>시작하기</span>
+          <span class="chip">쪽지 0</span>
+          <span class="chip" style="color:#0b8b3f"><svg class="i i13" style="color:#03c75a"><use href="#ui-leaf"/></svg>해피빈</span>
+        </div>
+        <div class="lc-tabs">
+          <button class="lt on" onclick="goMail()">메일 <b id="homeUnread">+0</b></button>
+          <button class="lt">카페</button>
+          <button class="lt">블로그 <b>1</b></button>
+          <button class="lt">페이</button>
+          <button class="nx"><svg class="i i12"><use href="#ui-chev-r"/></svg></button>
+        </div>
+
+        <!-- '메일' 탭을 누른 상태의 전체 메일 패널 -->
+        <div class="mailpop">
+          <div class="mp-h">전체 메일</div>
+          <div class="mp-list" id="mpList"></div>
+          <div class="mp-f">
+            <button class="fl" onclick="goMail()">
+              <span class="gi"><svg class="i i15"><use href="#app-mail"/></svg></span>메일
+            </button>
+            <button class="fr">
+              <span class="gi"><svg class="i i14"><use href="#ui-pencil"/></svg></span>메일쓰기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="float-btns">
+    <button><svg class="i i17"><use href="#ui-up"/></svg></button>
+    <button class="adm hold-btn" data-hold="1"><svg class="i i17"><use href="#ui-gear"/></svg></button>
+  </div>
+</div>
+
+<!-- ===================== 화면 2 / 3 : 네이버 메일 ===================== -->
+<div id="screen-mail" class="screen pc-only">
+  <div class="m-gnb">
+    <button class="m-logo" onclick="goHome()" title="네이버 메인으로">
+      <svg style="width:22px;height:22px"><use href="#sc-mail"/></svg><span class="t">메일</span>
+    </button>
+    <div class="m-apps">
+      <button class="ap on"><svg class="i i17"><use href="#app-mail"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-cal"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-cloud"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-contact"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-box"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-todo"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-w"/></svg></button>
+      <button class="ap"><svg class="i i17"><use href="#app-flag"/></svg></button>
+    </div>
+    <div class="m-gnb-right">
+      <button class="m-prof">
+        <span class="av" id="mailAvatar"></span><span id="mailProfName">aldhw..</span>
+        <svg class="i i11"><use href="#ui-chev-d"/></svg>
+      </button>
+      <button class="ico-btn"><svg class="i i18"><use href="#ui-chat"/></svg></button>
+      <button class="ico-btn"><svg class="i i18"><use href="#ui-bell"/></svg><span class="badge">10</span></button>
+      <button class="ico-btn hold-btn" data-hold="1"><svg class="i i18"><use href="#ui-grid"/></svg></button>
+    </div>
+  </div>
+
+  <div class="m-adstrip">
+    <div class="ph ad-slot" data-ad="2"></div>
+    <div class="body ad-slot" data-ad="3"></div>
+    <div class="rt"><span>AD</span><span>오늘 그만 보기</span><svg class="i i11"><use href="#ui-x"/></svg></div>
+  </div>
+
+  <div class="m-body">
+    <div class="m-side">
+      <div class="m-write">
+        <button class="w1">메일 쓰기</button>
+        <button class="w2">내게 쓰기</button>
+      </div>
+      <div class="m-quick">
+        <button class="q"><span class="v" id="qUnread">0</span><span>안읽음</span></button>
+        <button class="q"><span class="ic"><svg class="i i13"><use href="#ui-star"/></svg></span><span>중요</span></button>
+        <button class="q"><span class="ic"><svg class="i i13"><use href="#ui-clip"/></svg></span><span>첨부</span></button>
+        <button class="q"><span class="ic"><svg class="i i13"><use href="#ui-to"/></svg></span><span>TO</span></button>
+      </div>
+      <div class="m-nav">
+        <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-mailall"/></svg></span>전체메일<span class="tag">정리하기</span></button>
+        <button class="nv" id="navInbox" onclick="openBox('inbox')"><span class="ic"><svg class="i i14"><use href="#ui-inbox"/></svg></span>받은메일함<span class="cnt" id="navInboxCnt">0</span></button>
+        <button class="nv" id="navSent" onclick="openBox('sent')"><span class="ic"><svg class="i i14"><use href="#ui-plane"/></svg></span>보낸메일함<span class="cnt" id="navSentCnt"></span></button>
+        <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-usercheck"/></svg></span>수신확인</button>
+        <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-doc"/></svg></span>임시보관함</button>
+        <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-pencil"/></svg></span>내게쓴메일함<span class="cnt">10</span></button>
+        <div class="sec">
+          <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-folders"/></svg></span>스마트메일함<span class="cv"><svg class="i i11"><use href="#ui-chev-u"/></svg></span></button>
+          <button class="nv sub"><span class="ic">└</span>프로모션<span class="cnt">999+</span></button>
+          <button class="nv sub"><span class="ic">└</span>청구·결제<span class="cnt">694</span></button>
+          <button class="nv sub"><span class="ic">└</span>SNS<span class="cnt">1</span></button>
+        </div>
+        <div class="sec">
+          <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-folder"/></svg></span>내 메일함<span class="cv"><svg class="i i11"><use href="#ui-chev-u"/></svg></span></button>
+          <button class="nv"><span class="ic"><svg class="i i14"><use href="#ui-trash"/></svg></span>휴지통<span class="cnt">999+</span></button>
+        </div>
+      </div>
+      <div class="m-foot">
+        <div class="rowb">환경설정</div>
+        <div class="rowb">고객센터<span class="tg">스마트봇</span></div>
+        <div class="rowb">메일용량 <span class="cap" style="margin-left:6px">1.43GB</span><span style="color:#a8adb3">&nbsp;/ 5GB</span></div>
+        <div class="rowb">공지사항</div>
+        <div class="dim">새로운 보안 기능 '프라이버시 보…</div>
+      </div>
+    </div>
+
+    <div class="m-main">
+      <!-- 목록 화면 -->
+      <div id="viewList">
+        <div class="m-chipbar">
+          <button class="ch on" id="chipBox">받은메일함</button>
+          <button class="ch">프로모션<span class="dot"></span></button>
+          <button class="ch">청구·결제<span class="dot"></span></button>
+          <button class="ch">SNS<span class="dot"></span></button>
+          <button class="ch" style="width:30px;padding:0">+</button>
+          <div class="srch">
+            <div class="box">
+              <input type="text" id="mailSearch" placeholder="메일 검색" oninput="renderList()">
+              <svg class="i i14"><use href="#ui-search"/></svg>
+            </div>
+            <span class="det">상세 <svg class="i i11"><use href="#ui-chev-d"/></svg></span>
+          </div>
+        </div>
+        <div class="m-toolbar">
+          <span class="cbx"><svg class="i i14"><use href="#ui-chk"/></svg><svg class="i i10"><use href="#ui-chev-d"/></svg></span>
+          <button class="tb">읽음</button>
+          <button class="tb">삭제</button>
+          <button class="tb">스팸신고</button>
+          <span class="sep"></span>
+          <button class="tb">답장</button>
+          <button class="tb">전체답장</button>
+          <button class="tb">전달</button>
+          <span class="sep"></span>
+          <button class="tb">이동 <svg class="i i10"><use href="#ui-chev-d"/></svg></button>
+          <button class="tb">더보기 <svg class="i i10"><use href="#ui-chev-d"/></svg></button>
+          <span class="sep"></span>
+          <button class="tb">필터 <svg class="i i10"><use href="#ui-chev-d"/></svg></button>
+          <span class="cnt"><b id="tbUnread">0</b> / <span id="tbTotal">0</span> 안읽음 삭제</span>
+          <span class="rt">
+            <svg class="i i14"><use href="#ui-refresh"/></svg><svg class="i i10"><use href="#ui-chev-d"/></svg>
+            <svg class="i i14" style="margin-left:6px"><use href="#ui-list"/></svg><svg class="i i10"><use href="#ui-chev-d"/></svg>
+          </span>
+        </div>
+        <div id="mailRows"></div>
+        <div class="pager">
+          <button><svg class="i i11"><use href="#ui-dchev-l"/></svg></button>
+          <button><svg class="i i11"><use href="#ui-chev-l"/></svg></button>
+          <button class="on">1</button><button>2</button><button>3</button><button>4</button><button>5</button>
+          <button><svg class="i i11"><use href="#ui-chev-r"/></svg></button>
+          <button><svg class="i i11"><use href="#ui-dchev-r"/></svg></button>
+        </div>
+      </div>
+
+      <!-- 상세 화면 -->
+      <div id="viewDetail" class="hide">
+        <div class="dt-head">
+          <button class="back" onclick="backToList()">
+            <svg class="i i12"><use href="#ui-chev-l"/></svg><span id="dtBoxName">받은메일함</span>
+          </button>
+          <span class="cnt"><b id="dtUnread">0</b> / <span id="dtTotal">0</span> 안읽음 삭제</span>
+          <div class="srch">
+            <div class="box"><input type="text" placeholder="메일 검색"><svg class="i i14"><use href="#ui-search"/></svg></div>
+            <span class="det" style="font-size:12px;color:#444;display:flex;align-items:center;gap:3px">상세 <svg class="i i11"><use href="#ui-chev-d"/></svg></span>
+          </div>
+        </div>
+        <div class="m-toolbar">
+          <button class="tb">답장</button>
+          <button class="tb">전체답장</button>
+          <button class="tb">전달</button>
+          <span class="sep"></span>
+          <button class="tb">삭제</button>
+          <button class="tb">스팸신고</button>
+          <button class="tb">안읽음</button>
+          <span class="sep"></span>
+          <button class="tb">이동 <svg class="i i10"><use href="#ui-chev-d"/></svg></button>
+          <button class="tb">더보기 <svg class="i i10"><use href="#ui-chev-d"/></svg></button>
+          <span class="rt">
+            <button class="tb" onclick="backToList()">목록</button>
+            <svg class="i i12"><use href="#ui-chev-u"/></svg><svg class="i i12"><use href="#ui-chev-d"/></svg>
+          </span>
+        </div>
+        <div class="dt-title">
+          <button class="st" id="dtStar" onclick="toggleStarDetail()"><svg class="i i15"><use href="#ui-star"/></svg></button>
+          <h1 id="dtSubject">제목</h1>
+          <svg class="i i12" style="color:#b9bec4;margin-top:4px"><use href="#ui-ext"/></svg>
+          <span class="rt"><svg class="i i13"><use href="#ui-print"/></svg>인쇄 &nbsp;|&nbsp; 번역</span>
+        </div>
+        <div class="dt-meta">
+          <div class="mrow">
+            <span class="lb"><svg class="i i11"><use href="#ui-chev-u"/></svg>보낸사람</span>
+            <span class="chip" id="dtFrom">-</span>
+          </div>
+          <div class="mrow"><span class="lb" style="padding-left:15px">받는사람</span><span class="chip" id="dtTo">-</span></div>
+          <div class="date" id="dtDate">-</div>
+        </div>
+        <div class="dt-content" id="dtBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 모바일 버전 ===================== -->
+<div id="m-app">
+
+  <!-- ---------- 모바일 홈 ---------- -->
+  <section class="mv on" id="mv-home">
+    <header class="mh-top">
+      <button class="mi" onclick="mShow('menu')"><span class="mham"><span></span><span></span><span></span></span></button>
+      <span class="mpay">pay</span>
+      <span class="sp"></span>
+      <button class="mi"><svg class="i i22"><use href="#ui-bell"/></svg><span class="bdg">9</span></button>
+    </header>
+    <div class="mh-body">
+      <div class="msearch-wrap">
+        <div class="msearch">
+          <span class="nlogo">N</span>
+          <input id="mSearchInput" type="text" placeholder="검색어를 입력해 주세요." autocomplete="off">
+          <span class="lens"><svg class="i i20"><use href="#ui-img"/></svg></span>
+          <span class="dv"></span>
+          <span class="ai"><svg class="i i18"><use href="#ui-send"/></svg></span>
+        </div>
+        <div class="msugg hide" id="mSugg"></div>
+      </div>
+
+      <div class="m-adcard ad-slot" data-ad="1"></div>
+
+      <div class="minfo">
+        <div class="c"><span class="v">맑음 26.2° <span class="sun"></span></span><span class="s">다산1동</span></div>
+        <div class="c"><span class="v">1,362.00 <span class="up">▲ 0.22%</span></span><span class="s">미국USD</span></div>
+        <div class="c"><span class="v">27,068.7 <span class="up">▲ 0.41%</span></span><span class="s">나스닥 종합</span></div>
+      </div>
+
+      <div class="mband"><b>멤버십데이</b> 쾌속 품절 주의, 역대급 할인과 적립</div>
+
+      <div class="mfeed">
+        <div class="f"><div class="ph ad-slot"></div><div class="tt">&nbsp;</div></div>
+        <div class="f"><div class="ph ad-slot"></div><div class="tt">&nbsp;</div></div>
+      </div>
+    </div>
+    <nav class="mtab">
+      <button><span class="ic"><svg class="i i18"><use href="#sc-shop"/></svg></span>쇼핑</button>
+      <button class="on"><span class="ic">N</span>홈</button>
+      <button onclick="mShow('menu')"><span class="ic"><svg class="i i18"><use href="#ui-doc"/></svg></span>투데이</button>
+      <button><span class="ic"><svg class="i i18"><use href="#ui-live"/></svg></span>클립</button>
+      <button onclick="mShow('menu')"><span class="ic"><svg class="i i18"><use href="#ui-person"/></svg></span>마이</button>
+    </nav>
+  </section>
+
+  <!-- ---------- 모바일 메뉴 / 바로가기 ---------- -->
+  <section class="mv" id="mv-menu">
+    <header class="mm-top">
+      <span class="nm" id="mMenuName">님 <svg class="i i14"><use href="#ui-chev-r"/></svg></span>
+      <span class="sp"></span>
+      <span class="cnt">9</span>
+      <button class="mi hold-btn" data-hold="1"><svg class="i i20"><use href="#ui-gear"/></svg></button>
+      <button class="mi" onclick="mShow('home')"><svg class="i i20"><use href="#ui-x"/></svg></button>
+    </header>
+    <div class="mm-body">
+      <div class="mm-sec"><h4>최근</h4><span class="rt">모두삭제</span></div>
+      <div class="mm-grid">
+        <button><span class="ic"><svg><use href="#sc-shop"/></svg></span><span class="lb">쇼핑</span></button>
+        <button><span class="ic" style="background:#03c75a;color:#fff;font-size:11px;font-weight:800">pay</span><span class="lb">네이버페이</span></button>
+        <button><span class="ic"><svg><use href="#sc-realty"/></svg></span><span class="lb">부동산</span></button>
+        <button onclick="goMail()"><span class="ic"><svg><use href="#sc-mail"/></svg></span><span class="lb">메일</span></button>
+      </div>
+      <div class="mm-sec"><h4>바로가기</h4><span class="rt">펼쳐보기 &nbsp;|&nbsp; 편집</span></div>
+      <div class="mm-grid">
+        <button onclick="goMail()">
+          <span class="bg" id="mMenuUnread">+0</span>
+          <span class="ic"><svg><use href="#sc-mail"/></svg></span><span class="lb">메일</span>
+        </button>
+        <button><span class="ic"><svg class="i i22" style="color:#03c75a"><use href="#app-flag"/></svg></span><span class="lb">Keep</span></button>
+        <button><span class="ic"><svg><use href="#sc-cafe"/></svg></span><span class="lb">카페</span></button>
+        <button><span class="ic"><svg><use href="#sc-blog"/></svg></span><span class="lb">블로그</span></button>
+        <button><span class="ic"><svg><use href="#sc-shop"/></svg></span><span class="lb">쇼핑</span></button>
+        <button><span class="ic" style="background:#03c75a;color:#fff;font-size:11px;font-weight:800">pay</span><span class="lb">네이버페이</span></button>
+        <button><span class="ic"><svg><use href="#sc-webtoon"/></svg></span><span class="lb">웹툰</span></button>
+        <button><span class="ic"><svg class="i i22" style="color:#9aa0a6"><use href="#ui-grid"/></svg></span><span class="lb">더보기</span></button>
+      </div>
+      <div class="mm-line"></div>
+      <div class="mm-sec"><h4>새 소식</h4></div>
+      <div class="mm-news">
+        <div class="row"><span class="dot"><svg class="i i13"><use href="#ui-leaf"/></svg></span>적립금으로 구독료만큼 돌려받기</div>
+        <div class="row"><span class="dot"><svg class="i i13"><use href="#ui-bell"/></svg></span>공지사항</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- 모바일 받은메일함 ---------- -->
+  <section class="mv" id="mv-mail" style="position:relative">
+    <div class="ml-appbar" id="mAppBar">
+      <span class="ic"><svg class="i i22"><use href="#sc-mail"/></svg></span>
+      <span class="tx">네이버 메일 앱에서<br>더 편리하게 사용해 보세요!</span>
+      <button class="go">앱 열기</button>
+      <button class="mi" onclick="document.getElementById('mAppBar').style.display='none'">
+        <svg class="i i17"><use href="#ui-x"/></svg></button>
+    </div>
+    <header class="ml-head">
+      <button class="logo" onclick="goHome()">N</button>
+      <span class="ti"><span id="mListTitle">받은메일함</span> <b id="mListCnt">+0</b></span>
+      <button class="mi"><svg class="i i20"><use href="#ui-search"/></svg></button>
+      <button class="mi" onclick="mDrawer(true)"><span class="mham"><span></span><span></span><span></span></span></button>
+    </header>
+    <div class="ml-chips">
+      <button class="ch on" id="mChip">받은메일함</button>
+      <button class="ch">프로모션<span class="dot"></span></button>
+      <button class="ch">청구·결제<span class="dot"></span></button>
+      <button class="ch">SNS<span class="dot"></span></button>
+      <button class="ch" style="padding:0 14px">+</button>
+    </div>
+    <div class="ml-body">
+      <div class="ml-ad ad-slot" data-ad="3"></div>
+      <div id="mRows"></div>
+    </div>
+    <button class="mfab"><svg class="i i22"><use href="#ui-pencil"/></svg></button>
+  </section>
+
+  <!-- ---------- 모바일 메일 상세 ---------- -->
+  <section class="mv" id="mv-detail">
+    <header class="md-head">
+      <button class="bk" onclick="mBack()">
+        <svg class="i i15"><use href="#ui-chev-l"/></svg><span id="mdBoxName">받은메일함</span>
+      </button>
+      <span class="sp"></span>
+      <button class="mi"><svg class="i i18"><use href="#ui-trash"/></svg></button>
+      <button class="mi" style="margin-left:14px"><svg class="i i18"><use href="#ui-star"/></svg></button>
+    </header>
+    <div class="md-body">
+      <h1 id="mdSubject">제목</h1>
+      <div class="md-from">
+        <span class="av" id="mdAv">N</span>
+        <span class="i2">
+          <span class="n1" id="mdFrom">-</span>
+          <span class="n2" id="mdTo">-</span>
+        </span>
+        <span class="dt" id="mdDate">-</span>
+      </div>
+      <div class="md-cont" id="mdBody"></div>
+    </div>
+  </section>
+
+  <!-- ---------- 모바일 메일 서랍 ---------- -->
+  <div id="mv-drawer">
+    <div class="dw-top">
+      <span class="av" id="dwAv"></span>
+      <span class="in">
+        <span class="n1" id="dwName">님 <svg class="i i13"><use href="#ui-chev-r"/></svg></span>
+        <span class="n2" id="dwEmail">-</span>
+      </span>
+      <button class="mi hold-btn" data-hold="1"><svg class="i i20"><use href="#ui-gear"/></svg></button>
+      <button class="mi" style="margin-left:14px" onclick="mDrawer(false)"><svg class="i i20"><use href="#ui-x"/></svg></button>
+    </div>
+    <div class="dw-quick">
+      <button class="q"><span class="v" id="dwUnread">0</span>안읽음</button>
+      <button class="q"><span class="ic"><svg class="i i20"><use href="#ui-star"/></svg></span>중요</button>
+      <button class="q"><span class="ic"><svg class="i i20"><use href="#ui-clip"/></svg></span>첨부</button>
+      <button class="q"><span class="ic"><svg class="i i20"><use href="#ui-to"/></svg></span>TO</button>
+    </div>
+    <div class="dw-list">
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-mailall"/></svg></span>
+        <span class="lb">전체메일</span><span class="tag">정리하기</span></button>
+      <button class="dw-nv" id="dwInbox" onclick="mDrawerGo('inbox')"><span class="ic"><svg class="i i20"><use href="#ui-inbox"/></svg></span>
+        <span class="lb">받은메일함<span class="n" id="dwInboxCnt"></span></span></button>
+      <button class="dw-nv" id="dwSent" onclick="mDrawerGo('sent')"><span class="ic"><svg class="i i20"><use href="#ui-plane"/></svg></span>
+        <span class="lb">보낸메일함<span class="n" id="dwSentCnt"></span></span></button>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-usercheck"/></svg></span><span class="lb">수신확인</span></button>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-doc"/></svg></span><span class="lb">임시보관함</span></button>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-pencil"/></svg></span>
+        <span class="lb">내게쓴메일함<span class="n">10</span></span><span class="tag">내게쓰기</span></button>
+      <div class="dw-sep"></div>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-folders"/></svg></span>
+        <span class="lb">스마트메일함</span><svg class="i i14" style="color:#b9bec4"><use href="#ui-chev-u"/></svg></button>
+      <button class="dw-nv sub"><span class="lb">└ 프로모션<span class="n">999+</span></span></button>
+      <button class="dw-nv sub"><span class="lb">└ 청구·결제<span class="n">702</span></span></button>
+      <button class="dw-nv sub"><span class="lb">└ SNS<span class="n">1</span></span></button>
+      <div class="dw-sep"></div>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-folder"/></svg></span>
+        <span class="lb">내 메일함</span><span class="tag">추가</span></button>
+      <div class="dw-sep"></div>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-x"/></svg></span>
+        <span class="lb">스팸메일함<span class="n">7</span></span><span class="tag">비우기</span></button>
+      <button class="dw-nv"><span class="ic"><svg class="i i20"><use href="#ui-trash"/></svg></span>
+        <span class="lb">휴지통<span class="n">999+</span></span><span class="tag">비우기</span></button>
+      <div class="dw-sep"></div>
+      <button class="dw-nv"><span class="lb">로그아웃</span></button>
+      <button class="dw-nv"><span class="lb">고객센터</span><span class="tag">스마트봇</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 관리자 모드 ===================== -->
+<div id="admin">
+  <div class="adm-wrap">
+    <div class="adm-left">
+      <h3>리스트 폴더 <span style="font-weight:400;color:#8d9299;font-size:11.5px">[지점] › {테마} › (인물)</span></h3>
+      <div class="adm-newlist">
+        <input type="text" id="newBranch" placeholder="지점명">
+        <input type="text" id="newTheme" placeholder="테마명">
+        <input type="text" id="newPerson" placeholder="인물명">
+        <button onclick="addList()">+ 리스트 추가</button>
+      </div>
+      <div class="adm-lists" id="admLists"></div>
+      <div class="lfoot">
+        <button onclick="duplicateList()">현재 리스트 복제</button>
+        <button class="seed" onclick="exportSeed()" title="현재 모든 리스트를 배포 파일(seed.js)로 만들어 내려받습니다">
+          배포용 데이터 파일 만들기(seed.js)</button>
+        <button onclick="exportData()">데이터 내보내기(JSON)</button>
+        <button onclick="importData()">데이터 불러오기(JSON)</button>
+        <button class="prim" onclick="closeAdmin(true)" title="손님모드로 전환 (다시 들어오려면 5초 길게 누르기)">손님모드로 보기</button>
+        <div class="vinfo" id="admVinfo"></div>
+      </div>
+    </div>
+    <div class="adm-right">
+      <div class="adm-top">
+        <span class="ti">관리자모드</span>
+        <span class="sub" id="admCurName">-</span>
+        <button class="cl" onclick="closeAdmin(false)" title="닫기 (관리자 상태 유지 · 버튼 한 번 클릭으로 재진입)"><svg class="i i13"><use href="#ui-x"/></svg></button>
+      </div>
+      <div class="adm-scroll" id="admBody"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 배포 버전 안내 팝업 : 새 배포마다 딱 1회 -->
+<div id="verPop">
+  <div class="vp-card">
+    <div class="vp-ic"><svg class="i i22"><use href="#ui-refresh"/></svg></div>
+    <h3 id="verTitle">업데이트 버전입니다</h3>
+    <p id="verDesc"></p>
+    <button onclick="closeVerPop()">확인</button>
+  </div>
+</div>
+
+<!-- 배포용 데이터 파일 (관리자모드 → '배포용 데이터 파일 만들기'로 생성).
+     없어도 정상 동작하며, 있으면 그 내용이 모든 접속 기기의 기본 데이터가 된다. -->
+<script src="seed.js"></script>
+
+<script>
+/* ===================================================================
+   ★ 배포 버전 ★
+   GitHub 에 index.html 을 새로 올릴 때 아래 날짜만 'YYYY-MM-DD' 로 바꾸세요.
+   그러면 접속자에게 "0월 0일 업데이트 버전입니다" 팝업이 딱 1회 표시됩니다.
+   (데이터만 바꿔 seed.js 를 새로 올린 경우에는 자동으로 날짜가 잡히므로
+    이 값을 바꾸지 않아도 팝업이 표시됩니다.)
+=================================================================== */
+const APP_VERSION = '2026-09-29';
+
+/* ===================================================================
+   데이터 레이어
+=================================================================== */
+const KEY = 'naver_mock_v1';
+const SEED_KEY  = KEY + '_seedver';   /* 마지막으로 반영한 배포 데이터 버전 */
+const BUILD_KEY = KEY + '_build';     /* 업데이트 팝업을 확인한 버전 */
+
+const PRESS = ['일간스포츠','파이낸셜뉴스','뉴스타파','YTN','머니투데이','시사IN',
+  '헤럴드경제','뉴시스','한국경제','ChosunBiz','디지털타임스','ZDNET Korea',
+  '세계일보','서울신문','뉴데일리','농민신문','arirang','연합뉴스',
+  '텐아시아','TBS','신아일보','시사저널','시사저널e','Newsen'];
+
+/* 실시간 뉴스 (2026-09-18 기준) */
+const LIVE_NEWS = [
+  {t:'이재명 대통령, 취임 후 일곱 번째 대국민 기자회견…내·외신 기자 150여 명 참석', s:'연합뉴스'},
+  {t:'이 대통령, 개각·개헌·호르무즈 해협 파병 등 현안 입장 주목', s:'SBS'},
+  {t:'정부, 유류세 한시 인하 두 달 더 연장…휘발유 15%·경유·LPG부탄 25%', s:'머니투데이'},
+  {t:'추석 연휴 고속도로 주유소 기름값 리터당 100원 인하', s:'한국경제'},
+  {t:'김민석 대표 "추미애 경기지사 정치컨설팅 지출, 당의 공적 책임 있다"', s:'뉴시스'},
+  {t:'아시안게임 한국 선수단 본진, 결전지 나고야 입성', s:'일간스포츠'},
+  {t:"한미약품 국산 비만 신약 '에페' 출사표…위고비·마운자로 86% 점유 시장 도전", s:'헤럴드경제'},
+  {t:'트럼프 "이란 공격 여부 결정, 중대한 갈림길에 서 있다"', s:'YTN'},
+  {t:'사우디, 이란 지원 후티 반군에 2주 휴전 제안', s:'세계일보'}
+];
+
+function uid(){ return 'id' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
+
+/* 광고 슬롯 정의 (w·h 는 기준 크기 → 업로드 이미지를 이 크기에 맞춰 줄여 저장한다) */
+const AD_SLOTS = [
+  { n:'1', name:'메인 · 상단 큰 배너',     size:'830 × 132', w:830, h:132 },
+  { n:'2', name:'메일 · 상단 작은 이미지', size:'56 × 30',   w:56,  h:30  },
+  { n:'3', name:'메일 · 상단 띠배너',      size:'가변 × 30', w:900, h:30  }
+];
+
+/* 아이콘 헬퍼 (JS 생성 마크업용) */
+function svgI(id, cls){ return '<svg class="i '+(cls||'')+'"><use href="#'+id+'"/></svg>'; }
+
+function defaultList(){
+  return {
+    id: uid(),
+    branch: '기본지점', theme: '기본테마', person: '기본인물',
+    account: { email:'aldhkwnsk@naver.com', name:'aldhwknsk', photo:'' },
+    history: ['기본 텍스트 문구입니다'],
+    inbox: [{
+      id: uid(),
+      from: 'TVING',
+      fromEmail: 'no-reply@tving.com',
+      toName: '박미주',
+      to: 'aldhkwnsk@naver.com',
+      subject: '[TVING] 사이버 침해사고 관련 보상 신청 안내',
+      body: '# 사이버 침해사고 관련 보상 신청 안내\n\n티빙을 이용해 주시는 고객 여러분께\n\n고객 여러분께 불편과 심려를 끼쳐드린 점에 대해 다시 한번 깊이 사과드립니다.\n사이버 침해사고와 관련하여 마련한 고객 보상 신청이 시작되어 안내드립니다.\n\n\n**■ 신청 기간**\n- 2026년 9월 7일 ~ 9월 30일\n- 보상 신청 페이지에서 티빙 계정으로 로그인 및 본인확인 후 보상 대상 여부와 제공되는 보상 내용을 확인하고 신청하실 수 있습니다.\n\n**■ 보상 내용 확인 및 신청하기**\n- 티빙 앱 또는 PC 웹의 MY 화면 상단에서 \'사이버 침해사고 고객 보상 안내\' 배너를 선택해 주세요.\n\n※ 보상 대상 여부 및 혜택별 상세 내용은 보상 신청 페이지에서 확인해 주세요.',
+      image: '',
+      time: '2026-09-10T22:36',
+      read: false,
+      star: false
+    }],
+    sent: []
+  };
+}
+
+/* 배포 데이터(seed.js) → 로컬 저장 데이터 → 기본값 순으로 적용.
+   seed.js 의 version 이 이 기기에 반영된 것과 다르면(= 새로 배포된 것) 그 내용으로 갱신한다. */
+let seedApplied = false;
+function seedInfo(){
+  const s = window.NAVER_SEED;
+  if(s && s.data && Array.isArray(s.data.lists) && s.data.lists.length) return { ver:String(s.version||''), data:s.data };
+  return null;
+}
+function load(){
+  seedApplied = false;
+  let stored = null;
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(d && Array.isArray(d.lists) && d.lists.length) stored = d;
+    }
+  }catch(e){}
+
+  const seed = seedInfo();
+  if(seed){
+    let seen = null;
+    try{ seen = localStorage.getItem(SEED_KEY); }catch(e){}
+    if(!stored || seen !== seed.ver){
+      try{ localStorage.setItem(SEED_KEY, seed.ver); }catch(e){}
+      const d = JSON.parse(JSON.stringify(seed.data));
+      if(!d.activeId || !d.lists.some(l=>l.id===d.activeId)) d.activeId = d.lists[0].id;
+      seedApplied = !!stored;
+      return d;
+    }
+  }
+  if(stored) return stored;
+  const l = defaultList();
+  return { lists:[l], activeId:l.id };
+}
+let DB = load();
+/* 광고칸이 줄어들 때마다 기존에 넣어둔 이미지를 새 번호로 옮겨준다 */
+(function migrateAds(){
+  if(!DB) return;
+  if(!DB.adsV2){                       /* 구 2~10번 → 1~9번 (검색창 썸네일 삭제) */
+    if(DB.ads){
+      const m = {};
+      for(let i=2;i<=10;i++){ if(DB.ads[String(i)]) m[String(i-1)] = DB.ads[String(i)]; }
+      DB.ads = m;
+    }
+    DB.adsV2 = true;
+  }
+  if(!DB.adsV3){                       /* 쇼핑배너·우측광고·상품칸 삭제 → 1 / 8→2 / 9→3 */
+    if(DB.ads){
+      const m = {};
+      if(DB.ads['1']) m['1'] = DB.ads['1'];
+      if(DB.ads['8']) m['2'] = DB.ads['8'];
+      if(DB.ads['9']) m['3'] = DB.ads['9'];
+      DB.ads = m;
+    }
+    DB.adsV3 = true;
+  }
+})();
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ toast('저장 공간이 부족합니다. 첨부 사진 용량을 줄여주세요.'); } }
+function cur(){ return DB.lists.find(l=>l.id===DB.activeId) || DB.lists[0]; }
+function listLabel(l){ return '['+(l.branch||'')+']{'+(l.theme||'')+'}('+(l.person||'')+')'; }
+
+/* ===================================================================
+   유틸
+=================================================================== */
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const DAYS = ['일','월','화','수','목','금','토'];
+function parseTime(t){
+  if(!t) return null;
+  const d = new Date(t);
+  return isNaN(d.getTime()) ? null : d;
+}
+function ampm(d){
+  const h = d.getHours();
+  const label = h < 12 ? '오전' : '오후';
+  let hh = h % 12; if(hh === 0) hh = 12;
+  return label + ' ' + hh + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function listTime(t){
+  const d = parseTime(t); if(!d) return t || '';
+  const n = new Date();
+  if(d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate()) return ampm(d);
+  return String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') + ' '
+       + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+function fullTime(t){
+  const d = parseTime(t); if(!d) return t || '';
+  return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DAYS[d.getDay()]+') '+ampm(d);
+}
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('on'), 1800);
+}
+function readFileAsDataURL(file, cb){
+  if(!file) return;
+  if(file.size > 2.6*1024*1024){ toast('2.5MB 이하 이미지를 사용해 주세요.'); return; }
+  const fr = new FileReader();
+  fr.onload = ()=>cb(fr.result);
+  fr.readAsDataURL(file);
+}
+/* 메일함 표기 : 이름 <메일주소> (한쪽만 있으면 있는 것만) */
+function who(name, email){
+  const n = (name||'').trim(), e = (email||'').trim();
+  if(n && e) return n + ' <' + e + '>';
+  return n || e;
+}
+function fromOf(m){ return who(m.from, m.fromEmail) || '(보낸사람 없음)'; }
+function toOf(m){ return who(m.toName, m.to) || '(받는사람 없음)'; }
+
+/* ---- 광고 슬롯 렌더 ---- */
+function renderAds(){
+  DB.ads = DB.ads || {};
+  document.querySelectorAll('[data-ad]').forEach(el=>{
+    const n = el.getAttribute('data-ad');
+    const a = DB.ads[n];
+    if(a && a.img){
+      el.classList.add('filled');
+      el.innerHTML = '<img src="'+a.img+'" alt="" style="object-fit:'+(a.fit==='contain'?'contain':'cover')+'">';
+    }else{
+      el.classList.remove('filled');
+      el.innerHTML = '<span class="lbl"></span>';
+    }
+  });
+  measureAds();
+}
+/* 비어 있는 슬롯에 번호와 '실제 렌더된' 크기를 적어준다 */
+function measureAds(){
+  document.querySelectorAll('[data-ad]').forEach(el=>{
+    const lb = el.querySelector('.lbl');
+    if(!lb) return;
+    const n = el.getAttribute('data-ad');
+    const r = el.getBoundingClientRect();
+    const w = Math.round(r.width), h = Math.round(r.height);
+    if(!w || !h){ lb.textContent = 'AD-'+n; return; }      /* 아직 화면에 없을 때 */
+    if(w >= 100 && h >= 44) lb.innerHTML = 'AD-'+n+'<em>'+w+' × '+h+'</em>';   /* 넉넉하면 두 줄 */
+    else if(w >= 150)       lb.innerHTML = 'AD-'+n+' <em style="display:inline">· '+w+' × '+h+'</em>';
+    else if(w >= 46)        lb.textContent = 'AD-'+n;
+    else                    lb.textContent = n;
+  });
+}
+let adRzTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(adRzTimer);
+  adRzTimer = setTimeout(()=>{ measureAds(); syncRightHeight(); }, 120);
+});
+
+/* 업로드 이미지를 슬롯 기준 크기(2배)로 줄여 저장 → localStorage 용량 절약 */
+function fitImage(file, n, cb){
+  if(!file) return;
+  if(file.size > 8*1024*1024){ toast('8MB 이하 이미지를 사용해 주세요.'); return; }
+  const slot = AD_SLOTS.find(s=>s.n===String(n)) || { w:800, h:200 };
+  const maxW = slot.w*2, maxH = slot.h*2;
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const sc = Math.min(1, Math.max(maxW/w, maxH/h));
+      if(sc >= 1){ cb(fr.result); return; }
+      w = Math.max(1, Math.round(w*sc)); h = Math.max(1, Math.round(h*sc));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      let out = c.toDataURL('image/png');
+      if(out.length > 300*1024) out = c.toDataURL('image/jpeg', .86);
+      cb(out.length < fr.result.length ? out : fr.result);
+    };
+    img.onerror = ()=>toast('이미지를 읽을 수 없습니다.');
+    img.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+
+/* 본문 렌더 : # 제목 / **굵게** 지원, 나머지는 줄바꿈 유지 */
+function renderBody(text){
+  const lines = (text||'').split('\n');
+  let out = '', buf = [];
+  const flush = ()=>{ if(buf.length){ out += '<div class="blk">' + buf.join('\n') + '</div>'; buf = []; } };
+  lines.forEach(line=>{
+    if(/^#\s+/.test(line)){ flush(); out += '<h2>' + inline(line.replace(/^#\s+/,'')) + '</h2>'; }
+    else buf.push(inline(line));
+  });
+  flush();
+  return out;
+}
+function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'); }
+
+/* ===================================================================
+   화면 전환
+=================================================================== */
+let state = { box:'inbox', view:'list', mailId:null };
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el = document.getElementById(id);
+  el.classList.add('on');
+  el.scrollTop = 0;
+  measureAds();          /* 화면이 바뀌면 그 화면의 광고 슬롯 크기를 다시 잰다 */
+}
+function goHome(){ show('screen-home'); renderHome(); mDrawer(false); mShow('home'); }
+/* 메인화면에서 메일을 누르면 어떤 상태였든 항상 '받은메일함' 목록으로 진입 */
+function goMail(){
+  state.box = 'inbox'; state.view = 'list'; state.mailId = null;
+  const q = document.getElementById('mailSearch'); if(q) q.value = '';
+  show('screen-mail');
+  openBox('inbox');
+  mDrawer(false);
+  mShow('mail');
+}
+
+/* ===================================================================
+   화면 1 렌더
+=================================================================== */
+let tickerIdx = 0, newsView = 'grid';
+
+function renderHome(){
+  const l = cur();
+  document.getElementById('homeName').textContent = (l.account.name || (l.account.email||'').split('@')[0] || '사용자') + '님';
+  document.getElementById('homeEmail').textContent = l.account.email || '';
+  document.getElementById('homeAvatar').innerHTML =
+    '<span class="pic">' + (l.account.photo ? '<img src="'+l.account.photo+'">' : svgI('ui-person','i26')) + '</span>'
+    + '<span class="cog">' + svgI('ui-gear','i11') + '</span>';
+  const un = l.inbox.filter(m=>!m.read).length;
+  document.getElementById('homeUnread').textContent = '+' + un;
+  renderPress(); renderNewsList(); renderTicker(); renderAds(); renderMailPanel();
+  renderMHome();
+  requestAnimationFrame(syncRightHeight);
+}
+
+/* 로그인 카드 안 '전체 메일' 패널 (메일 탭을 누른 상태의 화면) */
+function popTime(t){
+  const d = parseTime(t); if(!d) return t || '';
+  const h = d.getHours();
+  let hh = h % 12; if(hh === 0) hh = 12;
+  return (h < 12 ? '오전 ' : '오후 ') + hh + '시 ' + d.getMinutes() + '분';
+}
+function renderMailPanel(){
+  const mails = sortedMails('inbox');
+  const host = document.getElementById('mpList');
+  if(!mails.length){ host.innerHTML = '<div class="mp-empty">받은 메일이 없습니다.</div>'; return; }
+  host.innerHTML = mails.map(m=>
+    '<div class="mp-row '+(m.read?'':'unread')+'" onclick="openFromPanel(\''+m.id+'\')">'
+    + '<div class="l1"><span class="nm">'+esc(m.from || '(보낸사람 없음)')+'</span>'
+    +   '<span class="tm">'+esc(popTime(m.time))+'</span></div>'
+    + '<div class="l2"><span class="sb">'+esc(m.subject || '(제목 없음)')+'</span>'
+    +   '<button class="del" onclick="event.stopPropagation()">'+svgI('ui-trash','i14')+'</button></div>'
+    + '</div>'
+  ).join('');
+}
+function openFromPanel(id){ goMail(); openMail(id); }
+
+/* 우측 메일 카드의 아래끝을 좌측 뉴스 카드의 아래끝에 맞춘다 */
+function syncRightHeight(){
+  const wrap = document.querySelector('.home-wrap');
+  const news = document.querySelector('.news-card');
+  const card = document.querySelector('.col-right .login-card');
+  if(!wrap || !news || !card) return;
+  /* 좌측 컬럼 높이를 재면 flex stretch 때문에 값이 되먹임되므로 뉴스 카드 아래끝을 기준으로 잰다 */
+  const h = Math.round(news.getBoundingClientRect().bottom - wrap.getBoundingClientRect().top);
+  if(h > 200) card.style.height = h + 'px';
+}
+function renderPress(){
+  document.getElementById('pressGrid').innerHTML = PRESS.map(p=>'<div class="pg">'+esc(p)+'</div>').join('');
+}
+function renderNewsList(){
+  document.getElementById('newsList').innerHTML = LIVE_NEWS.map((n,i)=>
+    '<div class="nl"><span class="no">'+(i+1)+'</span><div><div class="tt">'+esc(n.t)+'</div>'
+    + '<div class="src">'+esc(n.s)+' · 2026.09.18</div></div></div>'
+  ).join('');
+}
+function renderTicker(){
+  const n = LIVE_NEWS[tickerIdx % LIVE_NEWS.length];
+  document.getElementById('tickerLine').textContent = n.t;
+}
+function rotateTicker(){ tickerIdx++; renderTicker(); }
+setInterval(()=>{ if(document.getElementById('screen-home').classList.contains('on')) rotateTicker(); }, 5000);
+
+function setNewsView(v){
+  newsView = v;
+  document.getElementById('pressGrid').classList.toggle('hide', v!=='grid');
+  document.getElementById('newsList').classList.toggle('hide', v!=='list');
+  document.getElementById('vwGrid').classList.toggle('on', v==='grid');
+  document.getElementById('vwList').classList.toggle('on', v==='list');
+  document.getElementById('newsFootLabel').innerHTML = v==='grid' ? '언론사 더보기 <i>1/4</i>' : '실시간 주요뉴스 <i>2026.09.18</i>';
+  requestAnimationFrame(syncRightHeight);   /* 목록/그리드 전환으로 높이가 달라지면 우측도 맞춘다 */
+}
+
+/* 검색창 드롭다운 */
+const si = document.getElementById('searchInput');
+const sg = document.getElementById('sugg');
+function renderSugg(){
+  const h = cur().history || [];
+  let html = '<div class="sg-head"><span>최근검색</span><span>전체삭제</span></div>';
+  if(!h.length) html += '<div class="sg-empty">최근검색어가 없습니다.</div>';
+  else html += h.map((t,i)=>
+    '<div class="sg-item" onclick="pickSugg('+i+')"><span class="ck">'+svgI('ui-clock','i14')+'</span>'
+    + '<span class="t">'+esc(t)+'</span><span class="cl">'+svgI('ui-x','i12')+'</span></div>').join('');
+  html += '<div class="sg-foot"><span>최근검색어 끄기</span><span>도움말 '+svgI('ui-chev-u','i10')+'</span></div>';
+  sg.innerHTML = html;
+}
+function pickSugg(i){ si.value = (cur().history||[])[i] || ''; sg.classList.add('hide'); }
+si.addEventListener('focus', ()=>{ renderSugg(); sg.classList.remove('hide'); });
+si.addEventListener('input', ()=>{ renderSugg(); sg.classList.remove('hide'); });
+document.addEventListener('click', e=>{
+  if(!sg.contains(e.target) && e.target !== si) sg.classList.add('hide');
+});
+
+/* ===================================================================
+   화면 2 : 메일 목록
+=================================================================== */
+function boxName(b){ return b==='sent' ? '보낸메일함' : '받은메일함'; }
+function boxData(b){ return b==='sent' ? cur().sent : cur().inbox; }
+
+function openBox(b){
+  state.box = b; state.view = 'list';
+  document.getElementById('viewList').classList.remove('hide');
+  document.getElementById('viewDetail').classList.add('hide');
+  document.getElementById('chipBox').textContent = boxName(b);
+  document.getElementById('navInbox').classList.toggle('on', b==='inbox');
+  document.getElementById('navSent').classList.toggle('on', b==='sent');
+  renderMailHeader();
+  renderList();
+  renderAds();
+  renderMList();
+  document.querySelector('.m-main').scrollTop = 0;
+}
+function renderMailHeader(){
+  const l = cur();
+  document.getElementById('mailProfName').textContent = (l.account.email||'').split('@')[0].slice(0,6) + '..';
+  document.getElementById('mailAvatar').innerHTML = l.account.photo
+    ? '<img src="'+l.account.photo+'">' : svgI('ui-person','i14');
+  const un = l.inbox.filter(m=>!m.read).length;
+  document.getElementById('qUnread').textContent = un;
+  document.getElementById('navInboxCnt').textContent = un ? un : '';
+  document.getElementById('navSentCnt').textContent = l.sent.length ? l.sent.length : '';
+}
+function sortedMails(b){
+  return boxData(b).slice().sort((a,c)=>{
+    const da = parseTime(a.time), dc = parseTime(c.time);
+    return (dc?dc.getTime():0) - (da?da.getTime():0);
+  });
+}
+function renderList(){
+  const b = state.box;
+  const q = (document.getElementById('mailSearch').value || '').trim().toLowerCase();
+  let mails = sortedMails(b);
+  if(q) mails = mails.filter(m=>((m.subject||'')+(m.from||'')+(m.to||'')+(m.body||'')).toLowerCase().includes(q));
+  const all = boxData(b);
+  const un = all.filter(m=>!m.read).length;
+  document.getElementById('tbUnread').textContent = un;
+  document.getElementById('tbTotal').textContent = all.length;
+
+  const host = document.getElementById('mailRows');
+  if(!mails.length){ host.innerHTML = '<div class="empty-box">메일이 없습니다.</div>'; renderMailHeader(); return; }
+  host.innerHTML = mails.map(m=>{
+    const who = b==='sent' ? toOf(m) : fromOf(m);
+    return '<div class="mail-row '+(m.read?'':'unread')+'" onclick="openMail(\''+m.id+'\')">'
+      + '<span class="cb" onclick="event.stopPropagation()">'+svgI('ui-chk','i13')+'</span>'
+      + '<button class="st '+(m.star?'on':'')+'" onclick="event.stopPropagation();toggleStar(\''+m.id+'\')">'
+      +   svgI(m.star?'ui-star-on':'ui-star','i14') + '</button>'
+      + '<span class="env">'+svgI(m.read?'ui-env-open':'ui-env-closed','i14')+'</span>'
+      + '<span class="from">'+esc(who)+'</span>'
+      + '<span class="subj">'+(m.read?'':'<span class="imp">'+svgI('ui-bang','i11')+'</span>')
+      +   '<span class="tx">'+esc(m.subject||'(제목 없음)')+'</span>'
+      +   '<span class="mini">'+svgI('ui-search','i12')+'</span><span class="mini">'+svgI('ui-ext','i11')+'</span>'
+      + '</span>'
+      + (m.image?'<span class="clip">'+svgI('ui-clip','i12')+'</span>':'')
+      + '<span class="time">'+esc(listTime(m.time))+'</span>'
+      + '</div>';
+  }).join('');
+  renderMailHeader();
+}
+function toggleStar(id){
+  const m = boxData(state.box).find(x=>x.id===id);
+  if(m){ m.star = !m.star; save(); renderList(); }
+}
+
+/* ===================================================================
+   화면 3 : 메일 상세
+=================================================================== */
+function openMail(id){
+  const b = state.box;
+  const m = boxData(b).find(x=>x.id===id);
+  if(!m) return;
+  /* 메일을 열어도 읽음 상태는 바뀌지 않는다.
+     읽음/안읽음은 관리자모드의 '읽음 여부' 체크박스로만 변경한다. */
+  state.view = 'detail'; state.mailId = id;
+
+  document.getElementById('viewList').classList.add('hide');
+  document.getElementById('viewDetail').classList.remove('hide');
+  document.getElementById('dtBoxName').textContent = boxName(b);
+
+  const all = boxData(b);
+  document.getElementById('dtUnread').textContent = all.filter(x=>!x.read).length;
+  document.getElementById('dtTotal').textContent = all.length;
+
+  document.getElementById('dtSubject').textContent = m.subject || '(제목 없음)';
+  const star = document.getElementById('dtStar');
+  star.innerHTML = svgI(m.star?'ui-star-on':'ui-star','i15');
+  star.classList.toggle('on', !!m.star);
+
+  document.getElementById('dtFrom').textContent = who(m.from, m.fromEmail) || '-';
+  document.getElementById('dtTo').textContent = who(m.toName, m.to) || '-';
+  document.getElementById('dtDate').textContent = fullTime(m.time);
+
+  document.getElementById('dtBody').innerHTML =
+    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + renderBody(m.body);
+
+  renderMailHeader();
+  renderMDetail(m);
+  mShow('detail');
+  document.querySelector('.m-main').scrollTop = 0;
+}
+function backToList(){ openBox(state.box); mShow('mail'); }
+function toggleStarDetail(){
+  const m = boxData(state.box).find(x=>x.id===state.mailId);
+  if(!m) return;
+  m.star = !m.star; save();
+  const s = document.getElementById('dtStar');
+  s.innerHTML = svgI(m.star?'ui-star-on':'ui-star','i15');
+  s.classList.toggle('on', m.star);
+}
+
+/* ===================================================================
+   관리자 모드
+=================================================================== */
+/* 관리자 잠금 해제 상태.
+   - 5초 길게 누르기로 한 번 열면 해제 상태가 유지되어, 패널을 닫고 손님화면을 봐도
+     버튼을 '한 번 클릭'하면 바로 다시 관리자 화면으로 들어온다.
+   - [손님모드로 보기] 버튼을 눌렀을 때만 다시 잠긴다(= 그 다음엔 5초 길게 누르기 필요).
+   - 페이지를 새로 열면(F5·재실행) 잠긴 상태로 시작한다. */
+let adminUnlocked = false;
+
+function openAdmin(){
+  adminUnlocked = true;
+  document.getElementById('admin').classList.add('on');
+  renderAdmin();
+}
+/* toGuest=true : [손님모드로 보기] → 손님모드로 전환하고 다시 잠금
+   toGuest=false: ✕ / Esc      → 패널만 닫고 관리자 해제 상태 유지 */
+function closeAdmin(toGuest){
+  if(toGuest) adminUnlocked = false;
+  document.getElementById('admin').classList.remove('on');
+  save();
+  renderHome();
+  if(document.getElementById('screen-mail').classList.contains('on')) openBox(state.box);
+  if(toGuest) toast('손님모드로 전환했습니다.');
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && document.getElementById('admin').classList.contains('on')) closeAdmin(false);
+});
+
+/* ---- 관리자모드 진입 : 잠겨 있으면 5초 길게 누르기(아무 표시 없음), 해제 상태면 클릭 ---- */
+const HOLD_MS = 5000;
+let holdTimer = null;
+function holdCancel(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; } }
+document.querySelectorAll('[data-hold]').forEach(btn=>{
+  btn.addEventListener('pointerdown', e=>{
+    if(e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    holdCancel();
+    if(adminUnlocked) return;                       /* 해제 상태면 click 에서 바로 열림 */
+    holdTimer = setTimeout(()=>{ holdCancel(); openAdmin(); }, HOLD_MS);
+  });
+  btn.addEventListener('pointerup', holdCancel);
+  btn.addEventListener('pointerleave', holdCancel);
+  btn.addEventListener('pointercancel', holdCancel);
+  btn.addEventListener('contextmenu', e=>e.preventDefault());
+  btn.addEventListener('click', e=>{
+    e.preventDefault();
+    if(adminUnlocked) openAdmin();
+  });
+});
+
+function addList(){
+  const b = document.getElementById('newBranch').value.trim();
+  const t = document.getElementById('newTheme').value.trim();
+  const p = document.getElementById('newPerson').value.trim();
+  if(!b && !t && !p){ toast('지점명/테마명/인물명을 입력해 주세요.'); return; }
+  const l = defaultList();
+  l.branch=b; l.theme=t; l.person=p;
+  l.inbox=[]; l.sent=[]; l.history=['기본 텍스트 문구입니다'];
+  DB.lists.push(l); DB.activeId = l.id;
+  openFold(bOf(l), tOf(l));            /* 새 리스트가 들어간 폴더는 펼쳐둔다 */
+  save();
+  document.getElementById('newBranch').value='';
+  document.getElementById('newTheme').value='';
+  document.getElementById('newPerson').value='';
+  renderAdmin(); toast('리스트를 추가했습니다.');
+}
+function selectList(id){ DB.activeId = id; save(); renderAdmin(); }
+function deleteList(id, ev){
+  ev.stopPropagation();
+  if(DB.lists.length<=1){ toast('최소 1개의 리스트는 있어야 합니다.'); return; }
+  const l = DB.lists.find(x=>x.id===id);
+  if(!confirm(listLabel(l)+' 리스트를 삭제할까요? 되돌릴 수 없습니다.')) return;
+  DB.lists = DB.lists.filter(x=>x.id!==id);
+  if(DB.activeId===id) DB.activeId = DB.lists[0].id;
+  save(); renderAdmin();
+}
+function duplicateList(){
+  const c = JSON.parse(JSON.stringify(cur()));
+  c.id = uid(); c.person = (c.person||'') + ' 사본';
+  c.inbox.forEach(m=>m.id=uid()); c.sent.forEach(m=>m.id=uid());
+  DB.lists.push(c); DB.activeId = c.id;
+  openFold(bOf(c), tOf(c));
+  save(); renderAdmin(); toast('리스트를 복제했습니다.');
+}
+function download(name, text, type){
+  const blob = new Blob([text], {type: type || 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function exportData(){ download('naver_mock_data.json', JSON.stringify(DB,null,2), 'application/json'); }
+
+/* 현재 모든 리스트를 배포용 seed.js 로 내보낸다.
+   index.html 과 같은 폴더(같은 저장소)에 올리면 모든 접속 기기에 같은 내용이 표시된다. */
+function todayStr(){
+  const d = new Date(), p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function exportSeed(){
+  const ver = todayStr();
+  const body = '/* 네이버 화면 배포용 데이터 — ' + ver + ' 생성\n'
+    + '   index.html 과 같은 폴더에 seed.js 라는 이름으로 올리면\n'
+    + '   접속하는 모든 기기에 이 내용이 기본 데이터로 적용됩니다. */\n'
+    + 'window.NAVER_SEED = ' + JSON.stringify({ version: ver, data: DB }) + ';\n';
+  download('seed.js', body, 'application/javascript;charset=utf-8');
+  try{ localStorage.setItem(SEED_KEY, ver); }catch(e){}
+  toast('seed.js 를 내려받았습니다. index.html 과 같은 폴더에 올리세요.');
+}
+function importData(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='application/json';
+  inp.onchange = ()=>{
+    const f = inp.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      try{
+        const d = JSON.parse(fr.result);
+        if(!d.lists || !d.lists.length) throw 0;
+        DB = d; if(!cur()) DB.activeId = DB.lists[0].id;
+        save(); renderAdmin(); toast('데이터를 불러왔습니다.');
+      }catch(e){ toast('올바른 JSON 파일이 아닙니다.'); }
+    };
+    fr.readAsText(f);
+  };
+  inp.click();
+}
+
+/* ---- 리스트 폴더 트리 : [지점] > {테마} > (인물) ---- */
+const NO_B = '(지점 없음)', NO_T = '(테마 없음)';
+function enc(s){ return encodeURIComponent(s); }
+function bOf(l){ return ((l.branch||'').trim()) || NO_B; }
+function tOf(l){ return ((l.theme||'').trim()) || NO_T; }
+function foldKey(b,t){ return t===undefined||t===null ? 'B|'+b : 'T|'+b+'|'+t; }
+function isClosed(k){ return !!(DB.fold && DB.fold[k]); }
+function toggleFold(kEnc){
+  const k = decodeURIComponent(kEnc);        /* 폴더명에 따옴표가 있어도 안전하도록 인코딩해 넘긴다 */
+  DB.fold = DB.fold || {};
+  if(DB.fold[k]) delete DB.fold[k]; else DB.fold[k] = true;
+  save(); renderTree();
+}
+function openFold(b,t){ DB.fold = DB.fold || {}; delete DB.fold[foldKey(b)]; if(t!==undefined) delete DB.fold[foldKey(b,t)]; }
+function targets(b,t){ return DB.lists.filter(l=>bOf(l)===b && (t===null || tOf(l)===t)); }
+
+function renderTree(){
+  const groups = new Map();
+  DB.lists.forEach(l=>{
+    const b = bOf(l), t = tOf(l);
+    if(!groups.has(b)) groups.set(b, new Map());
+    if(!groups.get(b).has(t)) groups.get(b).set(t, []);
+    groups.get(b).get(t).push(l);
+  });
+  const ko = (a,b)=>a.localeCompare(b,'ko');
+  let h = '';
+  [...groups.keys()].sort(ko).forEach(b=>{
+    const tm = groups.get(b), bk = foldKey(b), bc = isClosed(bk);
+    const total = [...tm.values()].reduce((n,a)=>n+a.length,0);
+    h += '<div class="fold lv1">'
+      + '<button class="fh '+(bc?'closed':'')+'" onclick="toggleFold(\''+enc(bk)+'\')">'
+      +   '<span class="cv">'+svgI('ui-chev-d','i11')+'</span>'
+      +   '<span class="fi">'+svgI('ui-folder','i14')+'</span>'
+      +   '<span class="nm">['+esc(b)+']</span>'
+      +   '<span class="ct">'+total+'</span>'
+      +   '<span class="acts">'
+      +     '<span title="이 지점에 리스트 추가" onclick="event.stopPropagation();addInFolder(\''+enc(b)+'\',\'\')">+</span>'
+      +     '<span title="지점명 변경" onclick="event.stopPropagation();renameFolder(\'branch\',\''+enc(b)+'\',\'\')">'+svgI('ui-pencil','i11')+'</span>'
+      +     '<span class="rm" title="지점 폴더 통째로 삭제" onclick="event.stopPropagation();deleteFolder(\''+enc(b)+'\',\'\')">'+svgI('ui-x','i11')+'</span>'
+      +   '</span>'
+      + '</button>'
+      + '<div class="fold-body '+(bc?'closed':'')+'">';
+    [...tm.keys()].sort(ko).forEach(t=>{
+      const tk = foldKey(b,t), tc = isClosed(tk), arr = tm.get(t);
+      h += '<div class="fold lv2">'
+        + '<button class="fh '+(tc?'closed':'')+'" onclick="toggleFold(\''+enc(tk)+'\')">'
+        +   '<span class="cv">'+svgI('ui-chev-d','i11')+'</span>'
+        +   '<span class="fi">'+svgI('ui-folder','i13')+'</span>'
+        +   '<span class="nm">{'+esc(t)+'}</span>'
+        +   '<span class="ct">'+arr.length+'</span>'
+        +   '<span class="acts">'
+        +     '<span title="이 테마에 리스트 추가" onclick="event.stopPropagation();addInFolder(\''+enc(b)+'\',\''+enc(t)+'\')">+</span>'
+        +     '<span title="테마명 변경" onclick="event.stopPropagation();renameFolder(\'theme\',\''+enc(b)+'\',\''+enc(t)+'\')">'+svgI('ui-pencil','i11')+'</span>'
+        +     '<span class="rm" title="테마 폴더 통째로 삭제" onclick="event.stopPropagation();deleteFolder(\''+enc(b)+'\',\''+enc(t)+'\')">'+svgI('ui-x','i11')+'</span>'
+        +   '</span>'
+        + '</button>'
+        + '<div class="fold-body '+(tc?'closed':'')+'">';
+      arr.forEach(l=>{
+        h += '<button class="adm-item '+(l.id===DB.activeId?'on':'')+'" onclick="selectList(\''+l.id+'\')">'
+          + '<span class="nm">('+esc((l.person||'').trim()||'인물명 없음')+')</span>'
+          + '<span class="leaf-cnt">'+l.inbox.length+'/'+l.sent.length+'</span>'
+          + '<span class="del" title="이 리스트 삭제" onclick="deleteList(\''+l.id+'\',event)">'+svgI('ui-x','i12')+'</span>'
+          + '</button>';
+      });
+      h += '</div></div>';
+    });
+    h += '</div></div>';
+  });
+  document.getElementById('admLists').innerHTML = h || '<div class="tree-empty">리스트가 없습니다.</div>';
+}
+
+function addInFolder(bEnc, tEnc){
+  document.getElementById('newBranch').value = decodeURIComponent(bEnc) === NO_B ? '' : decodeURIComponent(bEnc);
+  const t = tEnc ? decodeURIComponent(tEnc) : '';
+  document.getElementById('newTheme').value = (t === NO_T) ? '' : t;
+  const p = document.getElementById('newPerson'); p.value = ''; p.focus();
+  toast('인물명을 입력하고 [+ 리스트 추가]를 누르세요.');
+}
+function renameFolder(kind, bEnc, tEnc){
+  const b = decodeURIComponent(bEnc);
+  const t = tEnc ? decodeURIComponent(tEnc) : null;
+  const label = kind==='branch' ? '지점명' : '테마명';
+  const v = prompt(label+'을 변경합니다. (폴더 안의 리스트 전체에 적용)', kind==='branch' ? b : t);
+  if(v===null) return;
+  const nv = v.trim();
+  if(!nv){ toast(label+'은 비울 수 없습니다.'); return; }
+  targets(b,t).forEach(l=>{ if(kind==='branch') l.branch = nv; else l.theme = nv; });
+  if(kind==='branch') openFold(nv); else openFold(b, nv);
+  save(); renderAdmin(); toast(label+'을 변경했습니다.');
+}
+function deleteFolder(bEnc, tEnc){
+  const b = decodeURIComponent(bEnc);
+  const t = tEnc ? decodeURIComponent(tEnc) : null;
+  const tg = targets(b,t);
+  if(!tg.length) return;
+  if(DB.lists.length - tg.length < 1){ toast('모든 리스트를 삭제할 수는 없습니다. 최소 1개는 남겨주세요.'); return; }
+  const name = t ? '['+b+']{'+t+'}' : '['+b+']';
+  if(!confirm(name+' 폴더 안의 리스트 '+tg.length+'개를 모두 삭제할까요? 되돌릴 수 없습니다.')) return;
+  const ids = new Set(tg.map(l=>l.id));
+  DB.lists = DB.lists.filter(l=>!ids.has(l.id));
+  if(ids.has(DB.activeId)) DB.activeId = DB.lists[0].id;
+  save(); renderAdmin();
+}
+
+function renderAdmin(){
+  renderTree();
+  const s = seedInfo();
+  document.getElementById('admVinfo').innerHTML =
+    '화면 버전 ' + esc(APP_VERSION) + '<br>배포 데이터 ' + (s ? esc(s.ver) : '없음 (이 기기에만 저장)');
+  const l = cur();
+  document.getElementById('admCurName').textContent = listLabel(l);
+
+  /* 우측 폼 */
+  let h = '';
+  h += '<div class="adm-hint">리스트마다 계정·검색기록·메일이 완전히 독립적으로 저장됩니다. '
+     + '아래에서 현재 선택된 리스트 <b>'+esc(listLabel(l))+'</b> 의 내용을 편집하세요. 변경은 즉시 저장됩니다.<br>'
+     + '<b>✕ / Esc</b> : 패널만 닫습니다(관리자 상태 유지 → 버튼 한 번 클릭으로 재진입). '
+     + '<b>손님모드로 보기</b> : 손님모드로 전환합니다(재진입 시 버튼 5초 길게 누르기 필요).</div>';
+
+  /* 리스트 이름 */
+  h += '<div class="adm-sec"><h4>리스트 정보 <span class="hint">[지점명]{테마명}(인물명)</span></h4><div class="in"><div class="fgrid">'
+     + '<label>지점명</label><input type="text" value="'+esc(l.branch)+'" oninput="setF(\'branch\',this.value)" onchange="refreshTree()">'
+     + '<label>테마명</label><input type="text" value="'+esc(l.theme)+'" oninput="setF(\'theme\',this.value)" onchange="refreshTree()">'
+     + '<label>인물명</label><input type="text" value="'+esc(l.person)+'" oninput="setF(\'person\',this.value)" onchange="refreshTree()">'
+     + '</div></div></div>';
+
+  /* 계정 */
+  h += '<div class="adm-sec"><h4>계정 입력란</h4><div class="in"><div class="fgrid">'
+     + '<label>이메일</label><input type="text" value="'+esc(l.account.email)+'" oninput="setAcc(\'email\',this.value)" placeholder="aldhkwnsk@naver.com">'
+     + '<label>표시 이름</label><input type="text" value="'+esc(l.account.name)+'" oninput="setAcc(\'name\',this.value)" placeholder="비우면 이메일 앞부분 사용">'
+     + '<label>사진</label><div class="thumb-prev">'
+     + '<div class="box">'+(l.account.photo?'<img src="'+l.account.photo+'">':svgI('ui-person','i22'))+'</div>'
+     + '<input type="file" accept="image/*" onchange="pickAccPhoto(this)">'
+     + (l.account.photo?'<button class="mini-btn r" onclick="setAcc(\'photo\',\'\');renderAdmin()">사진 삭제</button>':'')
+     + '</div></div></div></div>';
+
+  /* 검색기록 */
+  h += '<div class="adm-sec"><h4>검색기록 내역 입력란 <span class="hint">메인화면 검색창 클릭 시 드롭다운에 표시</span></h4><div class="in">';
+  (l.history||[]).forEach((t,i)=>{
+    h += '<div class="srow"><input type="text" value="'+esc(t)+'" oninput="setHist('+i+',this.value)">'
+       + '<button class="mini-btn r" onclick="delHist('+i+')">삭제</button></div>';
+  });
+  h += '<button class="mini-btn g" onclick="addHist()">+ 검색기록 추가</button></div></div>';
+
+  /* 받은메일 / 보낸메일 */
+  h += mailSection('inbox', '받은 이메일 입력란', l.inbox);
+  h += mailSection('sent', '보낸 이메일 입력란', l.sent);
+
+  /* 광고 이미지 */
+  h += adSection();
+
+  document.getElementById('admBody').innerHTML = h;
+}
+
+function adSection(){
+  DB.ads = DB.ads || {};
+  let h = '<div class="adm-sec"><h4>광고 이미지 입력란 '
+        + '<span class="hint">모든 리스트 공통 · 손님화면의 빈 광고칸에 표시된 AD 번호와 같습니다</span></h4><div class="in">';
+  AD_SLOTS.forEach(s=>{
+    const a = DB.ads[s.n] || {};
+    h += '<div class="ad-row">'
+      + '<span class="no">AD-'+s.n+'</span>'
+      + '<span class="ds">'+esc(s.name)+'<em>기준 크기 '+esc(s.size)+'</em></span>'
+      + '<span class="pv">'+(a.img?'<img src="'+a.img+'">':svgI('ui-img','i17'))+'</span>'
+      + '<input type="file" accept="image/*" onchange="pickAdImg(\''+s.n+'\',this)">'
+      + '<select onchange="setAdFit(\''+s.n+'\',this.value)"'+(a.img?'':' disabled')+'>'
+      +   '<option value="cover"'+(a.fit!=='contain'?' selected':'')+'>꽉 채우기</option>'
+      +   '<option value="contain"'+(a.fit==='contain'?' selected':'')+'>비율 맞추기</option>'
+      + '</select>'
+      + (a.img?'<button class="mini-btn r" onclick="clearAd(\''+s.n+'\')">삭제</button>'
+              :'<button class="mini-btn" disabled style="opacity:.4">삭제</button>')
+      + '</div>';
+  });
+  h += '<div style="font-size:11.5px;color:#9aa0a6;line-height:1.6;padding-top:10px">'
+     + '넣은 이미지는 기준 크기의 2배로 자동 축소해 저장하므로 용량 부담이 적습니다. '
+     + '이미지를 넣지 않은 칸은 손님화면에 <b>AD-번호와 실제 픽셀 크기</b>가 표시됩니다.</div>';
+  h += '</div></div>';
+  return h;
+}
+function pickAdImg(n, inp){
+  fitImage(inp.files[0], n, d=>{
+    DB.ads = DB.ads || {};
+    DB.ads[n] = { img:d, fit:(DB.ads[n] && DB.ads[n].fit) || 'cover' };
+    save(); renderAds(); renderAdmin();
+    toast('AD-'+n+' 광고 이미지를 넣었습니다.');
+  });
+}
+function setAdFit(n, v){
+  if(!DB.ads || !DB.ads[n]) return;
+  DB.ads[n].fit = v; save(); renderAds();
+}
+function clearAd(n){
+  if(DB.ads) delete DB.ads[n];
+  save(); renderAds(); renderAdmin();
+}
+
+function mailSection(box, title, arr){
+  const isInbox = box==='inbox';
+  let h = '<div class="adm-sec"><h4>'+title+' <span class="hint">'
+        + (isInbox?'보낸사람 · 받는사람 · 제목 · 본문 · 첨부사진 · 받은시간':'보낸사람 · 받는사람 · 제목 · 본문 · 첨부사진 · 보낸시간')
+        + '</span></h4><div class="in">';
+  if(!arr.length) h += '<div style="color:#9aa0a6;font-size:12.5px;margin-bottom:10px">등록된 메일이 없습니다.</div>';
+  arr.forEach((m,i)=>{
+    h += '<div class="mail-editor" id="me-'+box+'-'+i+'">'
+      + '<div class="me-h" onclick="document.getElementById(\'me-'+box+'-'+i+'\').classList.toggle(\'open\')">'
+      + '<span class="idx">'+(i+1)+'</span>'
+      + '<span class="nm">'+esc(m.subject || '(제목 없음)')+' <span style="color:#9aa0a6">· '+esc(isInbox?who(m.from,m.fromEmail):who(m.toName,m.to))+'</span></span>'
+      + '<span style="color:#9aa0a6;font-size:11.5px">'+esc(listTime(m.time))+'</span>'
+      + '<button class="mini-btn r" onclick="event.stopPropagation();delMail(\''+box+'\','+i+')">삭제</button>'
+      + '<span style="color:#b9bec4;display:flex">'+svgI('ui-chev-d','i12')+'</span></div>'
+      + '<div class="me-b"><div class="fgrid">'
+      + '<label>보낸사람 이름</label><input type="text" value="'+esc(m.from)+'" oninput="setMail(\''+box+'\','+i+',\'from\',this.value)" placeholder="TVING">'
+      + '<label>보낸사람 메일</label><input type="text" value="'+esc(m.fromEmail)+'" oninput="setMail(\''+box+'\','+i+',\'fromEmail\',this.value)" placeholder="no-reply@tving.com">'
+      + '<label>받는사람 이름</label><input type="text" value="'+esc(m.toName)+'" oninput="setMail(\''+box+'\','+i+',\'toName\',this.value)" placeholder="박미주">'
+      + '<label>받는사람 메일</label><input type="text" value="'+esc(m.to)+'" oninput="setMail(\''+box+'\','+i+',\'to\',this.value)" placeholder="aldhkwnsk@naver.com">'
+      + '<label>메일제목</label><input type="text" value="'+esc(m.subject)+'" oninput="setMail(\''+box+'\','+i+',\'subject\',this.value)">'
+      + '<label>메일본문</label><textarea oninput="setMail(\''+box+'\','+i+',\'body\',this.value)" placeholder="# 큰제목 / **굵게** 사용 가능">'+esc(m.body)+'</textarea>'
+      + '<label>첨부사진</label><div class="thumb-prev">'
+      + '<div class="box">'+(m.image?'<img src="'+m.image+'">':svgI('ui-img','i20'))+'</div>'
+      + '<input type="file" accept="image/*" onchange="pickMailImg(\''+box+'\','+i+',this)">'
+      + (m.image?'<button class="mini-btn r" onclick="setMail(\''+box+'\','+i+',\'image\',\'\');renderAdmin()">사진 삭제</button>':'')
+      + '</div>'
+      + '<label>'+(isInbox?'받은시간':'보낸시간')+'</label><input type="datetime-local" value="'+esc(m.time)+'" oninput="setMail(\''+box+'\','+i+',\'time\',this.value)">'
+      + (isInbox ? '<label>읽음 여부</label><label class="chkline"><input type="checkbox" '+(m.read?'checked':'')
+        + ' onchange="setMail(\''+box+'\','+i+',\'read\',this.checked)"> 읽은 메일로 표시 (해제 시 닫힌 편지 아이콘 + 안읽음 집계)</label>' : '')
+      + '</div></div></div>';
+  });
+  h += '<button class="mini-btn g" onclick="addMail(\''+box+'\')">+ '+(isInbox?'받은':'보낸')+'메일 추가</button></div></div>';
+  return h;
+}
+
+/* 관리자 편집 핸들러 */
+function setF(k,v){
+  const l = cur();
+  l[k]=v; save();
+  document.getElementById('admCurName').textContent = listLabel(l);
+  if(k==='person'){
+    document.querySelectorAll('#admLists .adm-item.on .nm')
+      .forEach(el=>el.textContent = '('+((l.person||'').trim()||'인물명 없음')+')');
+  }
+}
+/* 지점명·테마명을 바꾸면 폴더 위치가 달라지므로 입력이 끝났을 때(blur) 트리를 다시 묶는다 */
+function refreshTree(){ const l = cur(); openFold(bOf(l), tOf(l)); save(); renderTree(); }
+function setAcc(k,v){ cur().account[k]=v; save(); }
+function pickAccPhoto(inp){ readFileAsDataURL(inp.files[0], d=>{ cur().account.photo=d; save(); renderAdmin(); }); }
+function setHist(i,v){ cur().history[i]=v; save(); }
+function addHist(){ cur().history.push(''); save(); renderAdmin(); }
+function delHist(i){ cur().history.splice(i,1); save(); renderAdmin(); }
+function nowLocal(){
+  const d = new Date(); d.setSeconds(0,0);
+  const p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+function addMail(box){
+  const l = cur();
+  const m = { id:uid(), from:'', fromEmail:'', toName:l.account.name||'', to:l.account.email||'',
+              subject:'', body:'', image:'', time:nowLocal(), read:false, star:false };
+  if(box==='sent'){ m.from = l.account.name||''; m.fromEmail = l.account.email||''; m.toName=''; m.to=''; m.read = true; }
+  l[box].push(m); save(); renderAdmin();
+  setTimeout(()=>{
+    const el = document.getElementById('me-'+box+'-'+(l[box].length-1));
+    if(el){ el.classList.add('open'); el.scrollIntoView({block:'center'}); }
+  },0);
+}
+function delMail(box,i){
+  if(!confirm('이 메일을 삭제할까요?')) return;
+  cur()[box].splice(i,1); save(); renderAdmin();
+}
+function setMail(box,i,k,v){
+  cur()[box][i][k]=v; save();
+  if(k==='subject'||k==='from'||k==='fromEmail'||k==='to'||k==='toName'||k==='time'){
+    const nm = document.querySelector('#me-'+box+'-'+i+' .me-h .nm');
+    const m = cur()[box][i];
+    if(nm) nm.innerHTML = esc(m.subject||'(제목 없음)')+' <span style="color:#9aa0a6">· '
+      + esc(box==='inbox'?who(m.from,m.fromEmail):who(m.toName,m.to))+'</span>';
+  }
+}
+function pickMailImg(box,i,inp){ readFileAsDataURL(inp.files[0], d=>{ cur()[box][i].image=d; save(); renderAdmin(); }); }
+
+/* ===================================================================
+   모바일 버전 (PC 화면과 같은 데이터를 사용한다)
+=================================================================== */
+let mView = 'home';
+function mShow(v){
+  mView = v;
+  document.querySelectorAll('#m-app .mv').forEach(e=>e.classList.toggle('on', e.id === 'mv-'+v));
+  const el = document.getElementById('mv-'+v);
+  if(el){ const sc = el.querySelector('.mh-body,.mm-body,.ml-body,.md-body'); if(sc) sc.scrollTop = 0; }
+  if(v === 'menu')  renderMMenu();
+  if(v === 'mail')  renderMList();
+  measureAds();
+}
+function mDrawer(on){
+  document.getElementById('mv-drawer').classList.toggle('on', !!on);
+  if(on) renderMDrawer();
+}
+function mDrawerGo(box){ mDrawer(false); openBox(box); mShow('mail'); }
+function mBack(){ openBox(state.box); mShow('mail'); }
+
+/* 모바일 시간 표기 : 오늘이면 '오후 01:50', 아니면 '09.27' */
+function mTime(t){
+  const d = parseTime(t); if(!d) return t || '';
+  const n = new Date(), p = x=>String(x).padStart(2,'0');
+  if(d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate()){
+    const h = d.getHours(); let hh = h % 12; if(hh===0) hh = 12;
+    return (h<12?'오전 ':'오후 ') + p(hh) + ':' + p(d.getMinutes());
+  }
+  return p(d.getMonth()+1) + '.' + p(d.getDate());
+}
+function unreadCount(){ return cur().inbox.filter(m=>!m.read).length; }
+
+function renderMHome(){
+  const l = cur();
+  document.getElementById('mMenuName').innerHTML =
+    esc((l.account.name || (l.account.email||'').split('@')[0] || '사용자')) + '님 ' + svgI('ui-chev-r','i14');
+}
+function renderMMenu(){
+  renderMHome();
+  document.getElementById('mMenuUnread').textContent = '+' + unreadCount();
+}
+function renderMList(){
+  const b = state.box;
+  document.getElementById('mListTitle').textContent = boxName(b);
+  document.getElementById('mChip').textContent = boxName(b);
+  document.getElementById('mListCnt').textContent = b==='inbox' ? '+' + unreadCount() : String(cur().sent.length);
+  const mails = sortedMails(b);
+  const host = document.getElementById('mRows');
+  if(!mails.length){ host.innerHTML = '<div class="ml-empty">메일이 없습니다.</div>'; return; }
+  host.innerHTML = mails.map(m=>{
+    const w = b==='sent' ? toOf(m) : fromOf(m);
+    return '<div class="ml-row '+(m.read?'':'unread')+'" onclick="openMail(\''+m.id+'\')">'
+      + '<span class="cb"></span>'
+      + '<span class="ct">'
+      +   '<span class="l1"><span class="fr">'+esc(w)+'</span><span class="tm">'+esc(mTime(m.time))+'</span></span>'
+      +   '<span class="l2"><span class="sj">'+esc(m.subject||'(제목 없음)')+'</span>'
+      +     '<button class="st '+(m.star?'on':'')+'" onclick="event.stopPropagation();toggleStar(\''+m.id+'\')">'
+      +       svgI(m.star?'ui-star-on':'ui-star','i20')+'</button></span>'
+      + '</span></div>';
+  }).join('');
+}
+function renderMDetail(m){
+  document.getElementById('mdBoxName').textContent = boxName(state.box);
+  document.getElementById('mdSubject').textContent = m.subject || '(제목 없음)';
+  document.getElementById('mdFrom').textContent = who(m.from, m.fromEmail) || '-';
+  document.getElementById('mdTo').textContent = '받는사람 ' + (who(m.toName, m.to) || '-');
+  document.getElementById('mdDate').textContent = mTime(m.time);
+  document.getElementById('mdAv').textContent = (m.from || 'N').trim().charAt(0).toUpperCase();
+  document.getElementById('mdBody').innerHTML =
+    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + renderBody(m.body);
+}
+function renderMDrawer(){
+  const l = cur();
+  document.getElementById('dwAv').innerHTML = l.account.photo
+    ? '<img src="'+l.account.photo+'">' : svgI('ui-person','i26');
+  document.getElementById('dwName').innerHTML =
+    esc((l.account.name || (l.account.email||'').split('@')[0] || '사용자')) + '님 ' + svgI('ui-chev-r','i13');
+  document.getElementById('dwEmail').textContent = l.account.email || '';
+  const un = unreadCount();
+  document.getElementById('dwUnread').textContent = un;
+  document.getElementById('dwInboxCnt').textContent = un ? ' ' + un : '';
+  document.getElementById('dwSentCnt').textContent = l.sent.length ? ' ' + l.sent.length : '';
+  document.getElementById('dwInbox').classList.toggle('on', state.box==='inbox');
+  document.getElementById('dwSent').classList.toggle('on', state.box==='sent');
+}
+
+/* 모바일 검색창 : 최근검색 드롭다운 (PC와 같은 검색기록 사용) */
+const mSi = document.getElementById('mSearchInput');
+const mSg = document.getElementById('mSugg');
+function renderMSugg(){
+  const h = cur().history || [];
+  let html = '<div class="h"><span>최근검색</span><span>전체삭제</span></div>';
+  if(!h.length) html += '<div class="e">최근검색어가 없습니다.</div>';
+  else html += h.map((t,i)=>
+    '<div class="it" onclick="mPickSugg('+i+')">'+svgI('ui-clock','i15')
+    + '<span class="t">'+esc(t)+'</span><span class="c">'+svgI('ui-x','i14')+'</span></div>').join('');
+  mSg.innerHTML = html;
+}
+function mPickSugg(i){ mSi.value = (cur().history||[])[i] || ''; mSg.classList.add('hide'); }
+mSi.addEventListener('focus', ()=>{ renderMSugg(); mSg.classList.remove('hide'); });
+mSi.addEventListener('input', ()=>{ renderMSugg(); mSg.classList.remove('hide'); });
+document.addEventListener('click', e=>{
+  if(!mSg.contains(e.target) && e.target !== mSi) mSg.classList.add('hide');
+});
+
+/* ===================================================================
+   배포 버전 팝업 : 새 버전이 올라왔을 때만 1회 표시
+=================================================================== */
+function buildId(){
+  const s = seedInfo();
+  return APP_VERSION + (s ? '+' + s.ver : '');
+}
+function verDateText(){
+  const s = seedInfo();
+  const cand = [APP_VERSION, s ? s.ver : ''].filter(v=>/^\d{4}-\d{2}-\d{2}/.test(v)).sort();
+  const newest = cand.length ? cand[cand.length-1] : '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(newest);
+  return m ? (Number(m[2])+'월 '+Number(m[3])+'일') : '';
+}
+function initVerPop(){
+  const build = buildId();
+  let seen = null;
+  try{ seen = localStorage.getItem(BUILD_KEY); }catch(e){}
+  if(seen === build) return;                       /* 이미 확인한 버전이면 다시 띄우지 않는다 */
+  const d = verDateText();
+  document.getElementById('verTitle').textContent = d ? (d + ' 업데이트 버전입니다') : '업데이트 버전입니다';
+  document.getElementById('verDesc').textContent = (seen === null)
+    ? '최신 버전으로 실행 중입니다.'
+    : '새 버전이 배포되어 자동으로 적용되었습니다.';
+  document.getElementById('verPop').classList.add('on');
+}
+function closeVerPop(){
+  document.getElementById('verPop').classList.remove('on');
+  try{ localStorage.setItem(BUILD_KEY, buildId()); }catch(e){}
+}
+
+/* ===================================================================
+   초기화
+=================================================================== */
+save();
+renderHome();
+renderAds();
+renderMList();
+setNewsView('grid');
+initVerPop();
+
+/* 앱 설치(PWA) : http/https 로 열렸을 때만 서비스워커 등록 (로컬 파일로 열면 건너뜀) */
+if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+if(seedApplied) setTimeout(()=>toast('배포된 최신 데이터로 갱신되었습니다.'), 400);
+</script>
+</body>
+</html>
