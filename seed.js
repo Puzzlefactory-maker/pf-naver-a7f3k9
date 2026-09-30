@@ -1,0 +1,4 @@
+/* 네이버 화면 배포용 데이터 — 2026-09-30 11:20:26 생성
+   index.html 과 같은 폴더에 seed.js 라는 이름으로 올리면
+   접속하는 모든 기기에 이 내용이 기본 데이터로 적용됩니다. */
+window.NAVER_SEED = {"version":"2026-09-30 11:20:26","data":{"lists":[{"id":"seed-default-1","branch":"강남 2호점","theme":"성균관","person":"조연출","account":{"email":"jo-production@pufac.co.kr","name":"조연출","photo":""},"history":["인슐린 하루 4번 투약","인슐린 바꿔치기","인슐린 과다투여","인슐린 저혈당 쇼크","혈당 높이는 법","인슐린 부작용","인슐린 주사기","당뇨"],"inbox":[],"sent":[]},{"id":"idcziijnu4d64","branch":"강남 2호점","theme":"성균관","person":"한송이","account":{"email":"onesong@naver.com","name":"한송이","photo":""},"history":["펜타닐 투약 사망","펜타닐 헤로인 동시 투약 사망","펜타닐 헤로인 차이","헤로인 펜타닐 은어","헤로인 은어 밀가루","헤로인 치사량","펜타닐 헤로인 치사량","펜타닐 구하는 법","헤로인 구하는 법","마약상 연결하는 법","마약 구하는 법"],"inbox":[],"sent":[]}],"activeId":"idcziijnu4d64","ads":{},"adsV2":true,"adsV3":true,"fold":{}}};
