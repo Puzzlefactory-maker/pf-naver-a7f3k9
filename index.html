@@ -470,16 +470,41 @@ button{font-family:inherit;cursor:pointer;}
 .dw-nv.sub{padding-left:34px;font-size:15px;color:#333;}
 .dw-sep{height:1px;background:#f1f2f4;margin:6px 16px;}
 
+/* 관리자 패널 모바일 상단 탭 바 */
+.adm-mbar{display:none;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #eceef1;background:#fafbfc;flex:none;}
+.adm-mbar .mt{flex:1;height:38px;border:1px solid #dcdee1;border-radius:9px;background:#fff;font-size:12.5px;color:#444;}
+.adm-mbar .mt.on{background:#03c75a;border-color:#03c75a;color:#fff;font-weight:700;}
+.adm-mbar .gm{height:38px;padding:0 11px;border:0;border-radius:9px;background:#222;color:#fff;font-size:11.5px;font-weight:700;flex:none;}
+.adm-mbar .cl2{width:38px;height:38px;border:1px solid #dcdee1;border-radius:9px;background:#fff;color:#555;flex:none;
+  display:flex;align-items:center;justify-content:center;}
+
 @media (max-width:640px){
   .vp-card{width:auto;max-width:86vw;}
-  .adm-wrap{inset:8px;flex-direction:column;}
-  .adm-left{width:auto;max-height:46%;border-right:0;border-bottom:1px solid #eceef1;}
-  .adm-newlist{flex-direction:row;flex-wrap:wrap;}
-  .adm-newlist input{flex:1;min-width:84px;}
-  .adm-left .lfoot{flex-direction:row;flex-wrap:wrap;}
-  .adm-left .lfoot button{flex:1;min-width:120px;}
-  .fgrid{grid-template-columns:1fr;gap:6px;}
-  .ad-row{flex-wrap:wrap;}
+  #admin .adm-wrap{inset:0;border-radius:0;flex-direction:column;}
+  #admin .adm-mbar{display:flex;}
+  #admin .adm-top{display:none;}
+  #admin .adm-left{width:auto;border-right:0;flex:1;min-height:0;}
+  #admin .adm-right{flex:1;min-height:0;}
+  #admin .adm-wrap.show-left  .adm-right{display:none;}
+  #admin .adm-wrap.show-right .adm-left{display:none;}
+  #admin .adm-left h3{padding:12px 14px 8px;font-size:13px;}
+  #admin .adm-newlist{flex-direction:row;flex-wrap:wrap;padding:0 10px 10px;}
+  #admin .adm-newlist input{flex:1;min-width:88px;}
+  #admin .adm-newlist button{flex-basis:100%;}
+  #admin .adm-lists{padding:6px 6px 12px;}
+  #admin .adm-left .lfoot{padding:8px 10px 12px;}
+  #admin .adm-left .lfoot button{height:38px;}
+  #admin .adm-scroll{padding:14px 12px 44px;}
+  #admin .adm-sec .in{padding:12px;}
+  #admin .fgrid{grid-template-columns:1fr;gap:5px 0;}
+  #admin .fgrid label{margin-top:6px;font-weight:700;color:#444;}
+  #admin .fgrid textarea{min-height:150px;}
+  #admin .thumb-prev{flex-wrap:wrap;}
+  #admin .ad-row{flex-wrap:wrap;}
+  #admin .ad-row .ds{flex-basis:calc(100% - 120px);}
+  #admin .ad-row input[type=file]{width:100%;}
+  #admin .mail-editor .me-h{flex-wrap:wrap;}
+  #admin .mail-editor .me-h .nm{flex-basis:100%;order:3;white-space:normal;}
 }
 
 /* ============ 관리자 패널 ============ */
@@ -942,7 +967,7 @@ button{font-family:inherit;cursor:pointer;}
         <div class="news-head">
           <span class="dd">전체언론사 <svg class="i i11"><use href="#ui-chev-d"/></svg></span>
           <span class="press">· 연합뉴스 ·</span>
-          <span class="hl" id="tickerLine" onclick="rotateTicker()"></span>
+          <span class="hl" id="tickerLine" onclick="tickerClick()"></span>
           <span class="rt"><b>뉴스스탠드</b><span>뉴스홈</span></span>
         </div>
         <div id="pressGrid" class="press-grid"></div>
@@ -952,8 +977,8 @@ button{font-family:inherit;cursor:pointer;}
           <span class="more" id="newsFootLabel">언론사 더보기 <i>1/4</i></span>
           <button class="arw"><svg class="i i11"><use href="#ui-chev-r"/></svg></button>
           <div class="vw">
-            <button id="vwList" onclick="setNewsView('list')"><svg class="i i12"><use href="#ui-list"/></svg></button>
-            <button id="vwGrid" class="on" onclick="setNewsView('grid')"><svg class="i i12"><use href="#ui-thumbs"/></svg></button>
+            <button id="vwList" onclick="newsViewClick('list')"><svg class="i i12"><use href="#ui-list"/></svg></button>
+            <button id="vwGrid" class="on" onclick="newsViewClick('grid')"><svg class="i i12"><use href="#ui-thumbs"/></svg></button>
           </div>
         </div>
       </div>
@@ -1183,16 +1208,18 @@ button{font-family:inherit;cursor:pointer;}
   <!-- ---------- 모바일 홈 ---------- -->
   <section class="mv on" id="mv-home">
     <header class="mh-top">
-      <button class="mi" onclick="mShow('menu')"><span class="mham"><span></span><span></span><span></span></span></button>
+      <button class="mi" onclick="mMenuOpen()"><span class="mham"><span></span><span></span><span></span></span></button>
       <span class="mpay">pay</span>
       <span class="sp"></span>
-      <button class="mi"><svg class="i i22"><use href="#ui-bell"/></svg><span class="bdg">9</span></button>
+      <!-- 알림 아이콘 = 모바일 관리자 진입(5초 길게 누르기). 메일이 없어도 관리자로 들어올 수 있어야 하므로 항상 살아있다 -->
+      <button class="mi hold-btn" data-hold="1"><svg class="i i22"><use href="#ui-bell"/></svg><span class="bdg">9</span></button>
     </header>
     <div class="mh-body">
       <div class="msearch-wrap">
         <div class="msearch">
           <span class="nlogo">N</span>
-          <input id="mSearchInput" type="text" placeholder="검색어를 입력해 주세요." autocomplete="off">
+          <input id="mSearchInput" type="text" placeholder="검색어를 입력해 주세요." autocomplete="off"
+                 readonly inputmode="none">
           <span class="lens"><svg class="i i20"><use href="#ui-img"/></svg></span>
           <span class="dv"></span>
           <span class="ai"><svg class="i i18"><use href="#ui-send"/></svg></span>
@@ -1218,9 +1245,9 @@ button{font-family:inherit;cursor:pointer;}
     <nav class="mtab">
       <button><span class="ic"><svg class="i i18"><use href="#sc-shop"/></svg></span>쇼핑</button>
       <button class="on"><span class="ic">N</span>홈</button>
-      <button onclick="mShow('menu')"><span class="ic"><svg class="i i18"><use href="#ui-doc"/></svg></span>투데이</button>
+      <button><span class="ic"><svg class="i i18"><use href="#ui-doc"/></svg></span>투데이</button>
       <button><span class="ic"><svg class="i i18"><use href="#ui-live"/></svg></span>클립</button>
-      <button onclick="mShow('menu')"><span class="ic"><svg class="i i18"><use href="#ui-person"/></svg></span>마이</button>
+      <button onclick="mMenuOpen()"><span class="ic"><svg class="i i18"><use href="#ui-person"/></svg></span>마이</button>
     </nav>
   </section>
 
@@ -1368,7 +1395,14 @@ button{font-family:inherit;cursor:pointer;}
 
 <!-- ===================== 관리자 모드 ===================== -->
 <div id="admin">
-  <div class="adm-wrap">
+  <div class="adm-wrap show-left">
+    <!-- 모바일 전용 상단 탭 -->
+    <div class="adm-mbar">
+      <button class="mt on" id="admTabL" onclick="admTab('left')">리스트</button>
+      <button class="mt" id="admTabR" onclick="admTab('right')">내용 편집</button>
+      <button class="gm" onclick="closeAdmin(true)">손님모드</button>
+      <button class="cl2" onclick="closeAdmin(false)"><svg class="i i14"><use href="#ui-x"/></svg></button>
+    </div>
     <div class="adm-left">
       <h3>리스트 폴더 <span style="font-weight:400;color:#8d9299;font-size:11.5px">[지점] › {테마} › (인물)</span></h3>
       <div class="adm-newlist">
@@ -1545,6 +1579,12 @@ let DB = load();
 })();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ toast('저장 공간이 부족합니다. 첨부 사진 용량을 줄여주세요.'); } }
 function cur(){ return DB.lists.find(l=>l.id===DB.activeId) || DB.lists[0]; }
+
+/* 내용이 없는 화면은 눌러도 반응하지 않게 한다.
+   - 등록된 메일이 하나도 없으면 : 메일 관련 동작 전부 차단 (검색창·관리자 진입은 제외)
+   - 검색기록이 하나도 없으면   : 검색창을 눌러도 아무 일도 일어나지 않음 */
+function hasMail(){ const l = cur(); return (l.inbox && l.inbox.length > 0) || (l.sent && l.sent.length > 0); }
+function hasHistory(){ return (cur().history || []).some(t=>String(t||'').trim() !== ''); }
 function listLabel(l){ return '['+(l.branch||'')+']{'+(l.theme||'')+'}('+(l.person||'')+')'; }
 
 /* ===================================================================
@@ -1687,6 +1727,7 @@ function show(id){
 function goHome(){ show('screen-home'); renderHome(); mDrawer(false); mShow('home'); }
 /* 메인화면에서 메일을 누르면 어떤 상태였든 항상 '받은메일함' 목록으로 진입 */
 function goMail(){
+  if(!hasMail()) return;                 /* 등록된 메일이 없으면 눌러도 들어가지 않는다 */
   state.box = 'inbox'; state.view = 'list'; state.mailId = null;
   const q = document.getElementById('mailSearch'); if(q) q.value = '';
   show('screen-mail');
@@ -1711,6 +1752,9 @@ function renderHome(){
   document.getElementById('homeUnread').textContent = '+' + un;
   renderPress(); renderNewsList(); renderTicker(); renderAds(); renderMailPanel();
   renderMHome();
+  /* PC : 검색기록이 없으면 입력창을 잠근다 / 모바일 : 항상 잠금(키보드 차단, 목록만 표시) */
+  if(si)  si.readOnly  = !hasHistory();
+  if(mSi) mSi.readOnly = true;
   requestAnimationFrame(syncRightHeight);
 }
 
@@ -1734,7 +1778,7 @@ function renderMailPanel(){
     + '</div>'
   ).join('');
 }
-function openFromPanel(id){ goMail(); openMail(id); }
+function openFromPanel(id){ if(!hasMail()) return; goMail(); openMail(id); }
 
 /* 우측 메일 카드의 아래끝을 좌측 뉴스 카드의 아래끝에 맞춘다 */
 function syncRightHeight(){
@@ -1760,6 +1804,9 @@ function renderTicker(){
   document.getElementById('tickerLine').textContent = n.t;
 }
 function rotateTicker(){ tickerIdx++; renderTicker(); }
+/* 손님이 직접 누르는 동작들 : 메일 내용이 없으면 반응하지 않는다 */
+function tickerClick(){ if(!hasMail()) return; rotateTicker(); }
+function newsViewClick(v){ if(!hasMail()) return; setNewsView(v); }
 setInterval(()=>{ if(document.getElementById('screen-home').classList.contains('on')) rotateTicker(); }, 5000);
 
 function setNewsView(v){
@@ -1786,8 +1833,14 @@ function renderSugg(){
   sg.innerHTML = html;
 }
 function pickSugg(i){ si.value = (cur().history||[])[i] || ''; sg.classList.add('hide'); }
-si.addEventListener('focus', ()=>{ renderSugg(); sg.classList.remove('hide'); });
-si.addEventListener('input', ()=>{ renderSugg(); sg.classList.remove('hide'); });
+si.addEventListener('focus', ()=>{
+  if(!hasHistory()){ si.blur(); return; }          /* 검색기록이 없으면 눌러도 반응 없음 */
+  renderSugg(); sg.classList.remove('hide');
+});
+si.addEventListener('input', ()=>{
+  if(!hasHistory()) return;
+  renderSugg(); sg.classList.remove('hide');
+});
 document.addEventListener('click', e=>{
   if(!sg.contains(e.target) && e.target !== si) sg.classList.add('hide');
 });
@@ -1866,6 +1919,7 @@ function toggleStar(id){
    화면 3 : 메일 상세
 =================================================================== */
 function openMail(id){
+  if(!hasMail()) return;
   const b = state.box;
   const m = boxData(b).find(x=>x.id===id);
   if(!m) return;
@@ -1918,9 +1972,21 @@ function toggleStarDetail(){
    - 페이지를 새로 열면(F5·재실행) 잠긴 상태로 시작한다. */
 let adminUnlocked = false;
 
+function isNarrow(){ return window.matchMedia('(max-width:640px)').matches; }
+/* 모바일 관리자 패널 : '리스트' / '내용 편집' 두 화면을 번갈아 전체 높이로 보여준다 */
+function admTab(w){
+  const wrap = document.querySelector('.adm-wrap');
+  wrap.classList.toggle('show-left',  w==='left');
+  wrap.classList.toggle('show-right', w!=='left');
+  document.getElementById('admTabL').classList.toggle('on', w==='left');
+  document.getElementById('admTabR').classList.toggle('on', w!=='left');
+  const sc = w==='left' ? document.querySelector('.adm-lists') : document.querySelector('.adm-scroll');
+  if(sc) sc.scrollTop = 0;
+}
 function openAdmin(){
   adminUnlocked = true;
   document.getElementById('admin').classList.add('on');
+  admTab('left');
   renderAdmin();
 }
 /* toGuest=true : [손님모드로 보기] → 손님모드로 전환하고 다시 잠금
@@ -1975,7 +2041,10 @@ function addList(){
   document.getElementById('newPerson').value='';
   renderAdmin(); toast('리스트를 추가했습니다.');
 }
-function selectList(id){ DB.activeId = id; save(); renderAdmin(); }
+function selectList(id){
+  DB.activeId = id; save(); renderAdmin();
+  if(isNarrow()) admTab('right');      /* 모바일 : 리스트를 고르면 바로 편집 화면으로 */
+}
 function deleteList(id, ev){
   ev.stopPropagation();
   if(DB.lists.length<=1){ toast('최소 1개의 리스트는 있어야 합니다.'); return; }
@@ -2004,19 +2073,27 @@ function exportData(){ download('naver_mock_data.json', JSON.stringify(DB,null,2
 
 /* 현재 모든 리스트를 배포용 seed.js 로 내보낸다.
    index.html 과 같은 폴더(같은 저장소)에 올리면 모든 접속 기기에 같은 내용이 표시된다. */
+let seedBase = '', seedSeq = 1;    /* 같은 초에 여러 번 내보낼 때 버전이 겹치지 않게 */
 function todayStr(){
   const d = new Date(), p = n=>String(n).padStart(2,'0');
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
 }
 function exportSeed(){
-  const ver = todayStr();
+  /* 같은 날 여러 번 내보내도 매번 다른 버전이 되도록 시:분까지 넣는다.
+     (버전이 같으면 이미 그 버전을 받은 기기는 새 파일을 무시한다) */
+  const d = new Date(), p = n=>String(n).padStart(2,'0');
+  const base = todayStr() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  if(base === seedBase){ seedSeq++; } else { seedBase = base; seedSeq = 1; }
+  let ver = base + (seedSeq > 1 ? '-' + seedSeq : '');
+  try{ if(ver === localStorage.getItem(SEED_KEY)){ seedSeq++; ver = base + '-' + seedSeq; } }catch(e){}
   const body = '/* 네이버 화면 배포용 데이터 — ' + ver + ' 생성\n'
     + '   index.html 과 같은 폴더에 seed.js 라는 이름으로 올리면\n'
     + '   접속하는 모든 기기에 이 내용이 기본 데이터로 적용됩니다. */\n'
     + 'window.NAVER_SEED = ' + JSON.stringify({ version: ver, data: DB }) + ';\n';
   download('seed.js', body, 'application/javascript;charset=utf-8');
   try{ localStorage.setItem(SEED_KEY, ver); }catch(e){}
-  toast('seed.js 를 내려받았습니다. index.html 과 같은 폴더에 올리세요.');
+  renderAdmin();
+  toast('seed.js (' + ver + ') 내려받음 — 저장소의 seed.js 를 이 파일로 덮어쓰세요.');
 }
 function importData(){
   const inp = document.createElement('input');
@@ -2333,7 +2410,9 @@ function mDrawer(on){
   document.getElementById('mv-drawer').classList.toggle('on', !!on);
   if(on) renderMDrawer();
 }
-function mDrawerGo(box){ mDrawer(false); openBox(box); mShow('mail'); }
+function mDrawerGo(box){ if(!hasMail()) return; mDrawer(false); openBox(box); mShow('mail'); }
+/* 메뉴(바로가기) 화면 : 메일이 하나도 없으면 열리지 않고 메인에 머문다 */
+function mMenuOpen(){ if(!hasMail()) return; mShow('menu'); }
 function mBack(){ openBox(state.box); mShow('mail'); }
 
 /* 모바일 시간 표기 : 오늘이면 '오후 01:50', 아니면 '09.27' */
@@ -2415,10 +2494,17 @@ function renderMSugg(){
   mSg.innerHTML = html;
 }
 function mPickSugg(i){ mSi.value = (cur().history||[])[i] || ''; mSg.classList.add('hide'); }
-mSi.addEventListener('focus', ()=>{ renderMSugg(); mSg.classList.remove('hide'); });
-mSi.addEventListener('input', ()=>{ renderMSugg(); mSg.classList.remove('hide'); });
+/* 모바일 검색창은 입력창이 아니라 '최근검색 목록을 여는 버튼'처럼 동작한다.
+   readonly + inputmode=none 이라 눌러도 휴대폰 키보드가 올라오지 않는다. */
+mSi.addEventListener('focus', ()=>mSi.blur());
+document.querySelector('#mv-home .msearch').addEventListener('click', ()=>{
+  if(!hasHistory()) return;                       /* 검색기록이 없으면 아무 반응 없음 */
+  renderMSugg(); mSg.classList.remove('hide');
+});
 document.addEventListener('click', e=>{
-  if(!mSg.contains(e.target) && e.target !== mSi) mSg.classList.add('hide');
+  const inBar = e.target.closest && e.target.closest('#mv-home .msearch');
+  if(mSg.contains(e.target) || inBar) return;
+  mSg.classList.add('hide');
 });
 
 /* ===================================================================
