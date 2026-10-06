@@ -12,7 +12,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="네이버">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="icon" href="icon-512.png" sizes="512x512" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 /* ============ 공통 ============ */
@@ -362,7 +364,7 @@ button{font-family:inherit;cursor:pointer;}
 .mfeed .f .tt{font-size:13px;color:#222;margin-top:8px;line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .mtab{height:62px;background:#fff;border-top:1px solid #eceef1;display:flex;align-items:center;flex:none;
-  padding-bottom:env(safe-area-inset-bottom);}
+  padding-bottom:0px;padding-bottom:env(safe-area-inset-bottom);}
 .mtab button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:11px;color:#8d9299;}
 .mtab button.on{color:#111;font-weight:700;}
@@ -444,7 +446,7 @@ button{font-family:inherit;cursor:pointer;}
 .md-cont .att img{max-width:100%;border-radius:8px;border:1px solid #eceef1;margin:14px 0;}
 
 /* ---- 모바일 메일 서랍 ---- */
-#mv-drawer{position:fixed;inset:0;background:#fff;z-index:120;display:none;flex-direction:column;}
+#mv-drawer{position:fixed;top:0;right:0;bottom:0;left:0;background:#fff;z-index:120;display:none;flex-direction:column;}
 #mv-drawer.on{display:flex;}
 .dw-top{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;flex:none;}
 .dw-top .av{width:56px;height:56px;border-radius:50%;background:#eceef1;overflow:hidden;color:#b9bec4;
@@ -481,7 +483,7 @@ button{font-family:inherit;cursor:pointer;}
 
 @media (max-width:640px){
   .vp-card{width:auto;max-width:86vw;}
-  #admin .adm-wrap{inset:0;border-radius:0;flex-direction:column;}
+  #admin .adm-wrap{top:0;right:0;bottom:0;left:0;border-radius:0;flex-direction:column;}
   #admin .adm-mbar{display:flex;}
   #admin .adm-top{display:none;}
   #admin .adm-left{width:auto;border-right:0;flex:1;min-height:0;}
@@ -521,9 +523,9 @@ button{font-family:inherit;cursor:pointer;}
 }
 
 /* ============ 관리자 패널 ============ */
-#admin{position:fixed;inset:0;background:rgba(20,22,26,.45);z-index:200;display:none;}
+#admin{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,22,26,.45);z-index:200;display:none;}
 #admin.on{display:block;}
-.adm-wrap{position:absolute;inset:26px;background:#fff;border-radius:12px;display:flex;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25);}
+.adm-wrap{position:absolute;top:26px;right:26px;bottom:26px;left:26px;background:#fff;border-radius:12px;display:flex;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25);}
 .adm-left{width:296px;border-right:1px solid #eceef1;display:flex;flex-direction:column;background:#fafbfc;}
 .adm-left h3{margin:0;padding:16px 16px 10px;font-size:14px;color:#111;}
 .adm-newlist{padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #eceef1;}
@@ -606,7 +608,7 @@ button{font-family:inherit;cursor:pointer;}
 .toast.on{opacity:1;}
 
 /* 배포 버전 안내 팝업 */
-#verPop{position:fixed;inset:0;background:rgba(20,22,26,.42);z-index:500;display:none;align-items:center;justify-content:center;}
+#verPop{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(20,22,26,.42);z-index:500;display:none;align-items:center;justify-content:center;}
 #verPop.on{display:flex;}
 .vp-card{width:342px;background:#fff;border-radius:14px;padding:26px 24px 18px;box-shadow:0 14px 44px rgba(0,0,0,.28);text-align:center;}
 .vp-card .vp-ic{width:46px;height:46px;border-radius:14px;background:#eaf7ee;color:#03c75a;
@@ -630,6 +632,218 @@ button{font-family:inherit;cursor:pointer;}
 .ad-row input[type=file]{width:168px;flex:none;font-size:11px;}
 .ad-row select{height:28px;border:1px solid #dcdee1;border-radius:5px;font-size:11.5px;font-family:inherit;}
 </style>
+<!-- ===================== 구형 브라우저 호환 블록 =====================
+     삼성 인터넷 5.0(2016년 갤럭시) 이상, 크롬 49 이상에서도 앱이 열리도록
+     없는 기능을 대신 채워 넣는다. 최신 기기에서는 아무 일도 하지 않는다. -->
+<style id="oldBrowserCss">
+/* 언론사·메뉴·입력칸 배치 — 크롬 57 미만에는 grid가 없어서 flex로 대신한다 */
+@supports not (display:grid){
+  .press-grid{ display:flex; flex-wrap:wrap; }
+  .press-grid>*{ width:16.66%; box-sizing:border-box; }
+  .mm-grid{ display:flex; flex-wrap:wrap; }
+  .mm-grid>*{ width:25%; box-sizing:border-box; padding:0 4px 16px; }
+  .fgrid{ display:flex; flex-wrap:wrap; align-items:center; }
+  .fgrid>*{ box-sizing:border-box; margin-bottom:10px; }
+  .fgrid>*:nth-child(odd){ width:110px; padding-right:12px; }
+  .fgrid>*:nth-child(even){ width:calc(100% - 110px); }
+  #admin .fgrid>*{ width:100%; padding-right:0; margin-bottom:5px; }
+}
+</style>
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- 1. 없는 자바스크립트 기능 채우기 ---------- */
+
+  /* 숫자 앞에 0을 붙일 때 쓴다 (시각 표시). 크롬 57 미만에 없음 */
+  if(!String.prototype.padStart){
+    String.prototype.padStart = function(len, pad){
+      var s = String(this);
+      pad = (pad === undefined) ? ' ' : String(pad);
+      if(s.length >= len || pad === '') return s;
+      var fill = '';
+      while(fill.length < len - s.length) fill += pad;
+      return fill.slice(0, len - s.length) + s;
+    };
+  }
+  if(!String.prototype.padEnd){
+    String.prototype.padEnd = function(len, pad){
+      var s = String(this);
+      pad = (pad === undefined) ? ' ' : String(pad);
+      if(s.length >= len || pad === '') return s;
+      var fill = '';
+      while(fill.length < len - s.length) fill += pad;
+      return s + fill.slice(0, len - s.length);
+    };
+  }
+
+  /* 앱 설치 안내를 닫을 때 쓴다. 크롬 63 미만에 없음 */
+  if(window.Promise && !Promise.prototype['finally']){
+    Promise.prototype['finally'] = function(cb){
+      var P = this.constructor || Promise;
+      return this.then(
+        function(v){ return P.resolve(cb()).then(function(){ return v; }); },
+        function(e){ return P.resolve(cb()).then(function(){ throw e; }); }
+      );
+    };
+  }
+
+  /* 화면 요소를 한꺼번에 훑을 때 쓴다. 크롬 51 미만에 없어서 앱이 멈춘다 */
+  ['NodeList','HTMLCollection','DOMTokenList'].forEach(function(n){
+    var C = window[n];
+    if(C && C.prototype && !C.prototype.forEach){
+      C.prototype.forEach = Array.prototype.forEach;
+    }
+  });
+
+  if(!Object.entries){
+    Object.entries = function(o){
+      var r = [], k;
+      for(k in o){ if(Object.prototype.hasOwnProperty.call(o, k)) r.push([k, o[k]]); }
+      return r;
+    };
+  }
+  if(!Object.values){
+    Object.values = function(o){
+      var r = [], k;
+      for(k in o){ if(Object.prototype.hasOwnProperty.call(o, k)) r.push(o[k]); }
+      return r;
+    };
+  }
+  if(!Array.prototype.includes){
+    Array.prototype.includes = function(v){ return this.indexOf(v) !== -1; };
+  }
+  if(window.Element && !Element.prototype.closest){
+    var m = Element.prototype.matches || Element.prototype.webkitMatchesSelector ||
+            Element.prototype.msMatchesSelector;
+    Element.prototype.matches = m;
+    Element.prototype.closest = function(sel){
+      var e = this;
+      while(e && e.nodeType === 1){ if(m.call(e, sel)) return e; e = e.parentElement; }
+      return null;
+    };
+  }
+
+  /* ---------- 2. 칸 사이 여백(gap) 대신 여백 직접 계산 ---------- */
+  /* 크롬 84 미만에서는 flex 안의 gap이 무시되어 글자·버튼이 다 붙어 보인다.
+     그래서 스타일을 훑어 gap이 쓰인 곳을 찾아 바깥여백으로 바꿔 준다. */
+
+  var gapStyle = null;
+
+  function flexGapWorks(){
+    var box = document.createElement('div');
+    box.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;' +
+                        'position:absolute;visibility:hidden;height:0;overflow:visible';
+    box.appendChild(document.createElement('div'));
+    box.appendChild(document.createElement('div'));
+    var host = document.body || document.documentElement;
+    host.appendChild(box);
+    var ok = box.scrollHeight === 1;
+    host.removeChild(box);
+    return ok;
+  }
+
+  function firstValue(v){
+    v = (v || '').trim();
+    if(!v || v === 'normal') return '';
+    return v.split(/\s+/)[0];
+  }
+  function secondValue(v){
+    v = (v || '').trim();
+    if(!v || v === 'normal') return '';
+    var p = v.split(/\s+/);
+    return p[1] || p[0];
+  }
+
+  function collect(rules, out){
+    if(!rules) return;
+    for(var i = 0; i < rules.length; i++){
+      var r = rules[i];
+      if(r.cssRules && r.cssRules.length) collect(r.cssRules, out);   /* @media 안쪽까지 */
+      if(!r.style || !r.selectorText) continue;
+      if(r.style.gridTemplateColumns || r.style.gridTemplateRows) continue;  /* 표 배치는 따로 처리 */
+      if((r.style.display || '').indexOf('grid') >= 0) continue;
+
+      var g  = r.style.getPropertyValue('gap');
+      var rg = (r.style.getPropertyValue('row-gap')    || firstValue(g)).trim();
+      var cg = (r.style.getPropertyValue('column-gap') || secondValue(g)).trim();
+      if(rg === 'normal') rg = '';
+      if(cg === 'normal') cg = '';
+      if(!rg && !cg) continue;
+
+      out.push({ sel: r.selectorText, rg: rg, cg: cg,
+                 disp: (r.style.display || '').trim(),
+                 dir:  (r.style.flexDirection || '').trim(),
+                 wrap: (r.style.flexWrap || '').trim() });
+    }
+  }
+
+  function buildGapCss(){
+    var found = [];
+    var sheets = document.styleSheets;
+    for(var i = 0; i < sheets.length; i++){
+      try { collect(sheets[i].cssRules, found); } catch(e){ /* 읽을 수 없는 스타일은 건너뛴다 */ }
+    }
+
+    var css = [];
+    for(var k = 0; k < found.length; k++){
+      var f = found[k];
+      var parts = f.sel.split(',');
+      for(var s = 0; s < parts.length; s++){
+        var sel = parts[s].trim();
+        if(!sel || sel.indexOf('::') >= 0) continue;
+
+        /* 실제 화면에 있는 요소를 보고 가로줄인지 세로줄인지 판단한다 */
+        var el = null, cs = null;
+        try { el = document.querySelector(sel); } catch(e){ continue; }
+        if(el && window.getComputedStyle) cs = window.getComputedStyle(el);
+
+        var disp = f.disp || (cs ? cs.display : '');
+        if(disp.indexOf('flex') < 0) continue;          /* flex가 아니면 손대지 않는다 */
+
+        var dir  = f.dir  || (cs ? (cs.flexDirection || 'row') : 'row');
+        var wrap = f.wrap || (cs ? (cs.flexWrap || 'nowrap') : 'nowrap');
+        var column = dir.indexOf('column') === 0;
+
+        if(wrap.indexOf('wrap') === 0){
+          /* 줄바꿈되는 묶음은 모든 칸에 여백을 준다 */
+          if(f.cg) css.push(sel + '>*{margin-right:' + f.cg + '}');
+          if(f.rg) css.push(sel + '>*{margin-bottom:' + f.rg + '}');
+        } else if(column){
+          if(f.rg) css.push(sel + '>*+*{margin-top:' + f.rg + '}');
+        } else {
+          if(f.cg) css.push(sel + '>*+*{margin-left:' + f.cg + '}');
+        }
+      }
+    }
+
+    if(!gapStyle){
+      gapStyle = document.createElement('style');
+      gapStyle.id = 'oldBrowserGap';
+      (document.head || document.documentElement).appendChild(gapStyle);
+    }
+    gapStyle.textContent = css.join('\n');
+  }
+
+  function startGapFix(){
+    try {
+      if(flexGapWorks()) return;            /* 요즘 기기 — 그대로 둔다 */
+      buildGapCss();
+      /* 앱이 화면을 다 그린 뒤 한 번 더 — 그때 생긴 부분까지 맞춘다 */
+      setTimeout(buildGapCss, 1200);
+      setTimeout(buildGapCss, 3000);
+    } catch(e){ /* 실패해도 앱은 그대로 쓸 수 있으니 조용히 넘어간다 */ }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', startGapFix);
+  } else {
+    startGapFix();
+  }
+})();
+</script>
+<!-- =================== 구형 브라우저 호환 블록 끝 =================== -->
+
 </head>
 <body>
 
@@ -1470,7 +1684,7 @@ button{font-family:inherit;cursor:pointer;}
    (데이터만 바꿔 seed.js 를 새로 올린 경우에는 자동으로 날짜가 잡히므로
     이 값을 바꾸지 않아도 팝업이 표시됩니다.)
 =================================================================== */
-const APP_VERSION = '2026-09-29';
+const APP_VERSION = '2026-10-01';
 
 /* ===================================================================
    데이터 레이어
