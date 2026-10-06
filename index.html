@@ -567,6 +567,35 @@ button{font-family:inherit;cursor:pointer;}
 .fgrid input[type=text],.fgrid input[type=email],.fgrid input[type=datetime-local],.fgrid textarea,.fgrid select{
   width:100%;border:1px solid #dcdee1;border-radius:6px;padding:7px 9px;font-size:12.5px;outline:none;font-family:inherit;}
 .fgrid textarea{min-height:120px;resize:vertical;line-height:1.6;}
+
+/* 메일 본문 서식 편집기 */
+.rt-wrap{border:1px solid #dcdee1;border-radius:6px;overflow:hidden;background:#fff;}
+.rt-bar{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding:6px;background:#fafbfc;border-bottom:1px solid #eceef1;}
+.rt-bar button{height:28px;min-width:28px;padding:0 7px;border:1px solid #dcdee1;background:#fff;border-radius:5px;
+  font-size:12px;color:#333;line-height:1;}
+.rt-bar button:hover{background:#f0f1f3;}
+.rt-bar .sep{width:1px;height:18px;background:#e3e5e8;margin:0 4px;}
+.rt-bar select{width:auto;height:28px;border:1px solid #dcdee1;border-radius:5px;font-size:11.5px;font-family:inherit;padding:0 4px;}
+.rt-bar .sw{width:22px;height:22px;min-width:22px;padding:0;border-radius:5px;border:1px solid rgba(0,0,0,.14);}
+.rt-edit{min-height:180px;max-height:420px;overflow-y:auto;padding:11px 13px;outline:none;}
+.rt-edit:empty::before{content:attr(data-ph);color:#b9bec4;}
+.rt-edit:focus{box-shadow:inset 0 0 0 2px #d6f2e3;}
+
+/* 서식 본문 공통 표시 규칙 (편집기와 손님화면이 같게 보이도록) */
+.rt-edit,.mail-html{font-size:13.5px;line-height:1.75;color:#222;word-break:break-word;}
+.rt-edit font[size="1"],.mail-html font[size="1"]{font-size:11px;}
+.rt-edit font[size="2"],.mail-html font[size="2"]{font-size:12.5px;}
+.rt-edit font[size="3"],.mail-html font[size="3"]{font-size:13.5px;}
+.rt-edit font[size="4"],.mail-html font[size="4"]{font-size:15.5px;}
+.rt-edit font[size="5"],.mail-html font[size="5"]{font-size:18.5px;}
+.rt-edit font[size="6"],.mail-html font[size="6"]{font-size:24px;}
+.rt-edit font[size="7"],.mail-html font[size="7"]{font-size:32px;}
+.rt-edit h1,.mail-html h1{font-size:23px;margin:12px 0;}
+.rt-edit h2,.mail-html h2{font-size:19px;margin:12px 0;}
+.rt-edit h3,.mail-html h3{font-size:16px;margin:10px 0;}
+.rt-edit ul,.mail-html ul,.rt-edit ol,.mail-html ol{padding-left:22px;margin:8px 0;}
+.rt-edit blockquote,.mail-html blockquote{margin:8px 0;padding:6px 12px;border-left:3px solid #dcdee1;color:#555;}
+.rt-edit a,.mail-html a{color:#0068c3;text-decoration:underline;}
 .fgrid input:focus,.fgrid textarea:focus{border-color:#03c75a;}
 .thumb-prev{display:flex;align-items:center;gap:10px;}
 .thumb-prev .box{width:52px;height:52px;border-radius:8px;border:1px solid #e3e5e8;background:#f7f8fa;overflow:hidden;
@@ -1824,6 +1853,44 @@ function renderBody(text){
 }
 function inline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'); }
 
+/* ---- 서식 있는 메일 본문 ----
+   예전에 글자만 입력해 둔 본문(줄바꿈 · # 제목 · **굵게**)과
+   편집기로 만든 서식 본문(HTML)을 모두 그대로 보여준다. */
+const RT_TAGS = {B:1,STRONG:1,I:1,EM:1,U:1,S:1,STRIKE:1,BR:1,DIV:1,P:1,SPAN:1,FONT:1,
+                 UL:1,OL:1,LI:1,H1:1,H2:1,H3:1,A:1,BLOCKQUOTE:1};
+function isHtmlBody(s){
+  return /<(div|p|span|b|strong|i|em|u|s|strike|br|font|h[1-3]|ul|ol|li|a|blockquote)\b[^>]*>/i.test(s||'');
+}
+function sanitizeHtml(html){
+  let doc;
+  try{ doc = new DOMParser().parseFromString('<body><div id="rt-root">'+html+'</div></body>','text/html'); }
+  catch(e){ return esc(html); }
+  const root = doc.getElementById('rt-root');
+  if(!root) return esc(html);
+  (function walk(node){
+    Array.prototype.slice.call(node.children).forEach(function(el){
+      if(!RT_TAGS[el.tagName]){                       /* 허용하지 않는 태그는 글자만 남긴다 */
+        el.parentNode.replaceChild(doc.createTextNode(el.textContent), el);
+        return;
+      }
+      Array.prototype.slice.call(el.attributes).forEach(function(a){
+        const n = a.name.toLowerCase(), v = a.value;
+        let ok = false;
+        if(el.tagName === 'FONT' && (n==='color' || n==='size' || n==='face')) ok = true;
+        else if(n === 'style' && !/javascript:|expression|url\s*\(/i.test(v)) ok = true;
+        else if(n === 'href' && el.tagName === 'A' && /^(https?:|mailto:)/i.test(v)) ok = true;
+        if(!ok) el.removeAttribute(a.name);
+      });
+      walk(el);
+    });
+  })(root);
+  return root.innerHTML;
+}
+function bodyHtml(s){
+  return isHtmlBody(s) ? '<div class="mail-html">' + sanitizeHtml(s) + '</div>' : renderBody(s);
+}
+function bodyText(s){ return String(s||'').replace(/<[^>]*>/g,' '); }   /* 검색용 */
+
 /* ===================================================================
    화면 전환
 =================================================================== */
@@ -1994,7 +2061,7 @@ function renderList(){
   const b = state.box;
   const q = (document.getElementById('mailSearch').value || '').trim().toLowerCase();
   let mails = sortedMails(b);
-  if(q) mails = mails.filter(m=>((m.subject||'')+(m.from||'')+(m.to||'')+(m.body||'')).toLowerCase().includes(q));
+  if(q) mails = mails.filter(m=>((m.subject||'')+(m.from||'')+(m.to||'')+bodyText(m.body)).toLowerCase().includes(q));
   const all = boxData(b);
   const un = all.filter(m=>!m.read).length;
   document.getElementById('tbUnread').textContent = un;
@@ -2055,7 +2122,7 @@ function openMail(id){
   document.getElementById('dtDate').textContent = fullTime(m.time);
 
   document.getElementById('dtBody').innerHTML =
-    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + renderBody(m.body);
+    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + bodyHtml(m.body);
 
   renderMailHeader();
   renderMDetail(m);
@@ -2375,6 +2442,60 @@ function renderAdmin(){
   document.getElementById('admBody').innerHTML = h;
 }
 
+/* ---- 메일 본문 서식 편집기 ---- */
+const RT_COLORS = ['#222222','#e03131','#e8590c','#f08c00','#2f9e44','#1971c2','#6741d9','#c2255c','#868e96','#ffffff'];
+function rtEditor(box, i, body){
+  const html = isHtmlBody(body) ? sanitizeHtml(body) : renderBody(body);
+  let h = '<div class="rt-wrap"><div class="rt-bar">'
+    + '<button type="button" title="굵게" onmousedown="event.preventDefault()" onclick="rtCmd(this,\'bold\')" style="font-weight:800">가</button>'
+    + '<button type="button" title="기울임" onmousedown="event.preventDefault()" onclick="rtCmd(this,\'italic\')" style="font-style:italic">가</button>'
+    + '<button type="button" title="밑줄" onmousedown="event.preventDefault()" onclick="rtCmd(this,\'underline\')" style="text-decoration:underline">가</button>'
+    + '<button type="button" title="취소선" onmousedown="event.preventDefault()" onclick="rtCmd(this,\'strikeThrough\')" style="text-decoration:line-through">가</button>'
+    + '<span class="sep"></span>'
+    + '<select title="글자 크기" onmousedown="event.stopPropagation()" onchange="rtSize(this)">'
+    +   '<option value="">글자 크기</option>'
+    +   '<option value="1">아주 작게</option><option value="2">작게</option><option value="3">보통</option>'
+    +   '<option value="4">조금 크게</option><option value="5">크게</option><option value="6">아주 크게</option>'
+    +   '<option value="7">제목 크기</option>'
+    + '</select>'
+    + '<span class="sep"></span>';
+  RT_COLORS.forEach(col=>{
+    h += '<button type="button" class="sw" title="'+col+'" style="background:'+col+'" '
+       + 'onmousedown="event.preventDefault()" onclick="rtCmd(this,\'foreColor\',\''+col+'\')"></button>';
+  });
+  h += '<span class="sep"></span>'
+    + '<button type="button" title="글머리 기호" onmousedown="event.preventDefault()" onclick="rtCmd(this,\'insertUnorderedList\')">•목록</button>'
+    + '<button type="button" title="서식 지우기" onmousedown="event.preventDefault()" onclick="rtClear(this)">서식 지우기</button>'
+    + '</div>'
+    + '<div class="rt-edit" contenteditable="true" spellcheck="false" data-ph="메일 내용을 입력하세요. 글자를 선택한 뒤 위 버튼으로 굵기·크기·색·밑줄을 바꿀 수 있습니다."'
+    +      ' data-box="'+box+'" data-i="'+i+'" oninput="rtSync(this)" onblur="rtSync(this)">' + html + '</div>'
+    + '</div>';
+  return h;
+}
+function rtEd(btn){ return btn.closest('.rt-wrap').querySelector('.rt-edit'); }
+function rtCmd(btn, cmd, val){
+  const ed = rtEd(btn);
+  ed.focus();
+  try{ document.execCommand('styleWithCSS', false, false); }catch(e){}
+  document.execCommand(cmd, false, val || null);
+  rtSync(ed);
+}
+function rtSize(sel){
+  const v = sel.value; sel.value = '';
+  if(!v) return;
+  rtCmd(sel, 'fontSize', v);
+}
+function rtClear(btn){
+  const ed = rtEd(btn);
+  ed.focus();
+  document.execCommand('removeFormat', false, null);
+  rtSync(ed);
+}
+function rtSync(ed){
+  const box = ed.getAttribute('data-box'), i = Number(ed.getAttribute('data-i'));
+  setMail(box, i, 'body', ed.innerHTML);
+}
+
 function mailSection(box, title, arr){
   const isInbox = box==='inbox';
   let h = '<div class="adm-sec"><h4>'+title+' <span class="hint">'
@@ -2395,7 +2516,7 @@ function mailSection(box, title, arr){
       + '<label>받는사람 이름</label><input type="text" value="'+esc(m.toName)+'" oninput="setMail(\''+box+'\','+i+',\'toName\',this.value)" placeholder="박미주">'
       + '<label>받는사람 메일</label><input type="text" value="'+esc(m.to)+'" oninput="setMail(\''+box+'\','+i+',\'to\',this.value)" placeholder="aldhkwnsk@naver.com">'
       + '<label>메일제목</label><input type="text" value="'+esc(m.subject)+'" oninput="setMail(\''+box+'\','+i+',\'subject\',this.value)">'
-      + '<label>메일본문</label><textarea oninput="setMail(\''+box+'\','+i+',\'body\',this.value)" placeholder="# 큰제목 / **굵게** 사용 가능">'+esc(m.body)+'</textarea>'
+      + '<label>메일본문</label>' + rtEditor(box, i, m.body)
       + '<label>첨부사진</label><div class="thumb-prev">'
       + '<div class="box">'+(m.image?'<img src="'+m.image+'">':svgI('ui-img','i20'))+'</div>'
       + '<input type="file" accept="image/*" onchange="pickMailImg(\''+box+'\','+i+',this)">'
@@ -2528,7 +2649,7 @@ function renderMDetail(m){
   document.getElementById('mdDate').textContent = mTime(m.time);
   document.getElementById('mdAv').textContent = (m.from || 'N').trim().charAt(0).toUpperCase();
   document.getElementById('mdBody').innerHTML =
-    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + renderBody(m.body);
+    (m.image ? '<div class="att"><img src="'+m.image+'"></div>' : '') + bodyHtml(m.body);
 }
 function renderMDrawer(){
   const l = cur();
