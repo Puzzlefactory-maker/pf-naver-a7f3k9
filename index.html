@@ -27,14 +27,7 @@ body{
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 .hide{display:none !important;}
-/* 광고 슬롯 : 비어 있으면 번호와 실제 크기를 표시, 관리자모드에서 이미지를 넣으면 그 이미지가 채워진다 */
-.ad-slot{background:#f2f3f5;border:1px solid #eceef1;border-radius:6px;overflow:hidden;position:relative;
-  display:flex;align-items:center;justify-content:center;}
-.ad-slot .lbl{font-size:10.5px;color:#a3a9b0;text-align:center;line-height:1.35;letter-spacing:-.2px;padding:1px;
-  white-space:nowrap;font-weight:700;}
-.ad-slot .lbl em{display:block;font-style:normal;font-weight:400;color:#b7bcc2;font-size:10px;}
-.ad-slot img{width:100%;height:100%;display:block;}
-.ad-slot.filled{background:#fff;}
+.ad-slot{background:#f2f3f5;border:1px solid #eceef1;border-radius:6px;overflow:hidden;}
 /* 화면은 서로 완전히 분리 : 각 화면이 자기 영역 안에서만 스크롤된다
    (예전에 #screen-mail 의 display:flex 가 .screen 의 display:none 을 이겨서
     메인 화면 아래로 메일 화면이 따라 나오던 문제를 막는다) */
@@ -88,7 +81,6 @@ button{font-family:inherit;cursor:pointer;}
 .col-left{width:830px;align-self:flex-start;}
 .col-right{width:424px;align-self:flex-start;}
 
-.banner-top{width:100%;height:198px;margin-bottom:34px;}   /* 세로 1.5배 + 뉴스 카드를 아래로 내림 */
 
 .card{border:1px solid #e9ebee;border-radius:10px;background:#fff;}
 .news-card{padding:0;}
@@ -110,7 +102,7 @@ button{font-family:inherit;cursor:pointer;}
 .press-grid .pg{height:56px;border-right:1px solid #f1f2f4;border-bottom:1px solid #f1f2f4;display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:800;color:#333;letter-spacing:-.4px;cursor:pointer;}
 .press-grid .pg:nth-child(6n){border-right:0;}
-.press-grid .pg:nth-child(n+19){border-bottom:0;}
+.press-grid .pg:nth-child(n+43){border-bottom:0;}
 .press-grid .pg:hover{background:#fafbfc;}
 .news-list{padding:4px 0;}
 .news-list .nl{display:flex;gap:10px;padding:11px 18px;border-bottom:1px solid #f6f7f8;align-items:flex-start;cursor:pointer;}
@@ -207,10 +199,6 @@ button{font-family:inherit;cursor:pointer;}
 .m-prof .av{width:24px;height:24px;border-radius:50%;background:#eceef1;overflow:hidden;display:flex;align-items:center;
   justify-content:center;color:#b9bec4;}
 .m-prof .av img{width:100%;height:100%;object-fit:cover;}
-.m-adstrip{height:44px;display:flex;align-items:center;gap:12px;padding:0 18px;flex:none;border-bottom:1px solid #f4f5f6;}
-.m-adstrip .ph{width:56px;height:30px;}
-.m-adstrip .body{flex:1;height:30px;}
-.m-adstrip .rt{font-size:11px;color:#9aa0a6;display:flex;gap:10px;align-items:center;}
 
 .m-body{flex:1;display:flex;min-height:0;}
 .m-side{width:208px;border-right:1px solid #eceef1;padding:12px 0 20px;overflow-y:auto;flex:none;background:#fff;}
@@ -503,9 +491,6 @@ button{font-family:inherit;cursor:pointer;}
   #admin .fgrid label{margin-top:6px;font-weight:700;color:#444;}
   #admin .fgrid textarea{min-height:150px;}
   #admin .thumb-prev{flex-wrap:wrap;}
-  #admin .ad-row{flex-wrap:wrap;}
-  #admin .ad-row .ds{flex-basis:calc(100% - 120px);}
-  #admin .ad-row input[type=file]{width:100%;}
   #admin .mail-editor .me-h{flex-wrap:wrap;}
   #admin .mail-editor .me-h .nm{flex-basis:100%;order:3;white-space:normal;}
 
@@ -619,18 +604,6 @@ button{font-family:inherit;cursor:pointer;}
 .adm-left .lfoot .seed{background:#0b8b3f;border-color:#0b8b3f;color:#fff;font-weight:700;}
 .adm-left .lfoot .vinfo{font-size:11px;color:#9aa0a6;text-align:center;padding-top:2px;line-height:1.5;}
 
-/* 관리자 : 광고 이미지 목록 */
-.ad-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f4f5f6;}
-.ad-row:last-of-type{border-bottom:0;}
-.ad-row .no{width:46px;flex:none;font-size:11px;font-weight:800;color:#0b8b3f;background:#eaf7ee;border-radius:5px;
-  padding:3px 0;text-align:center;}
-.ad-row .ds{flex:1;min-width:0;font-size:12.5px;color:#333;}
-.ad-row .ds em{display:block;font-style:normal;font-size:11px;color:#9aa0a6;margin-top:2px;}
-.ad-row .pv{width:64px;height:40px;flex:none;border:1px solid #e3e5e8;border-radius:6px;background:#f7f8fa;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;color:#c4c8cd;}
-.ad-row .pv img{max-width:100%;max-height:100%;object-fit:contain;}
-.ad-row input[type=file]{width:168px;flex:none;font-size:11px;}
-.ad-row select{height:28px;border:1px solid #dcdee1;border-radius:5px;font-size:11.5px;font-family:inherit;}
 </style>
 <!-- ===================== 구형 브라우저 호환 블록 =====================
      삼성 인터넷 5.0(2016년 갤럭시) 이상, 크롬 49 이상에서도 앱이 열리도록
@@ -1179,8 +1152,6 @@ button{font-family:inherit;cursor:pointer;}
   <div class="home-wrap">
     <!-- 좌측 -->
     <div class="col-left">
-      <div class="banner-top ad-slot" data-ad="1"></div>
-
       <div class="card news-card">
         <div class="news-tabs">
           <button class="tb on">뉴스스탠드 <small>· 언론사편집</small></button>
@@ -1287,12 +1258,6 @@ button{font-family:inherit;cursor:pointer;}
       <button class="ico-btn"><svg class="i i18"><use href="#ui-bell"/></svg><span class="badge">10</span></button>
       <button class="ico-btn hold-btn" data-hold="1"><svg class="i i18"><use href="#ui-grid"/></svg></button>
     </div>
-  </div>
-
-  <div class="m-adstrip">
-    <div class="ph ad-slot" data-ad="2"></div>
-    <div class="body ad-slot" data-ad="3"></div>
-    <div class="rt"><span>AD</span><span>오늘 그만 보기</span><svg class="i i11"><use href="#ui-x"/></svg></div>
   </div>
 
   <div class="m-body">
@@ -1454,8 +1419,6 @@ button{font-family:inherit;cursor:pointer;}
         <div class="msugg hide" id="mSugg"></div>
       </div>
 
-      <div class="m-adcard ad-slot" data-ad="1"></div>
-
       <div class="minfo">
         <div class="c"><span class="v">맑음 26.2° <span class="sun"></span></span><span class="s">다산1동</span></div>
         <div class="c"><span class="v">1,362.00 <span class="up">▲ 0.22%</span></span><span class="s">미국USD</span></div>
@@ -1541,7 +1504,6 @@ button{font-family:inherit;cursor:pointer;}
       <button class="ch" style="padding:0 14px">+</button>
     </div>
     <div class="ml-body">
-      <div class="ml-ad ad-slot" data-ad="3"></div>
       <div id="mRows"></div>
     </div>
     <button class="mfab"><svg class="i i22"><use href="#ui-pencil"/></svg></button>
@@ -1684,7 +1646,7 @@ button{font-family:inherit;cursor:pointer;}
    (데이터만 바꿔 seed.js 를 새로 올린 경우에는 자동으로 날짜가 잡히므로
     이 값을 바꾸지 않아도 팝업이 표시됩니다.)
 =================================================================== */
-const APP_VERSION = '2026-10-01';
+const APP_VERSION = '2026-10-06';
 
 /* ===================================================================
    데이터 레이어
@@ -1696,7 +1658,11 @@ const BUILD_KEY = KEY + '_build';     /* 업데이트 팝업을 확인한 버전
 const PRESS = ['일간스포츠','파이낸셜뉴스','뉴스타파','YTN','머니투데이','시사IN',
   '헤럴드경제','뉴시스','한국경제','ChosunBiz','디지털타임스','ZDNET Korea',
   '세계일보','서울신문','뉴데일리','농민신문','arirang','연합뉴스',
-  '텐아시아','TBS','신아일보','시사저널','시사저널e','Newsen'];
+  '텐아시아','TBS','신아일보','시사저널','시사저널e','Newsen',
+  '경향신문','한겨레','중앙일보','동아일보','매일경제','서울경제',
+  '아시아경제','이데일리','전자신문','노컷뉴스','오마이뉴스','프레시안',
+  '국민일보','문화일보','아주경제','한국일보','조선일보','MBN',
+  '채널A','JTBC','KBS','MBC','SBS','스포츠조선'];
 
 /* 실시간 뉴스 (2026-09-18 기준) */
 const LIVE_NEWS = [
@@ -1713,12 +1679,6 @@ const LIVE_NEWS = [
 
 function uid(){ return 'id' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
 
-/* 광고 슬롯 정의 (w·h 는 기준 크기 → 업로드 이미지를 이 크기에 맞춰 줄여 저장한다) */
-const AD_SLOTS = [
-  { n:'1', name:'메인 · 상단 큰 배너',     size:'830 × 132', w:830, h:132 },
-  { n:'2', name:'메일 · 상단 작은 이미지', size:'56 × 30',   w:56,  h:30  },
-  { n:'3', name:'메일 · 상단 띠배너',      size:'가변 × 30', w:900, h:30  }
-];
 
 /* 아이콘 헬퍼 (JS 생성 마크업용) */
 function svgI(id, cls){ return '<svg class="i '+(cls||'')+'"><use href="#'+id+'"/></svg>'; }
@@ -1782,27 +1742,9 @@ function load(){
   return { lists:[l], activeId:l.id };
 }
 let DB = load();
-/* 광고칸이 줄어들 때마다 기존에 넣어둔 이미지를 새 번호로 옮겨준다 */
-(function migrateAds(){
-  if(!DB) return;
-  if(!DB.adsV2){                       /* 구 2~10번 → 1~9번 (검색창 썸네일 삭제) */
-    if(DB.ads){
-      const m = {};
-      for(let i=2;i<=10;i++){ if(DB.ads[String(i)]) m[String(i-1)] = DB.ads[String(i)]; }
-      DB.ads = m;
-    }
-    DB.adsV2 = true;
-  }
-  if(!DB.adsV3){                       /* 쇼핑배너·우측광고·상품칸 삭제 → 1 / 8→2 / 9→3 */
-    if(DB.ads){
-      const m = {};
-      if(DB.ads['1']) m['1'] = DB.ads['1'];
-      if(DB.ads['8']) m['2'] = DB.ads['8'];
-      if(DB.ads['9']) m['3'] = DB.ads['9'];
-      DB.ads = m;
-    }
-    DB.adsV3 = true;
-  }
+/* 광고 기능을 없앴으므로 예전 데이터에 남아 있던 광고 이미지는 정리한다 */
+(function dropAds(){
+  if(DB && DB.ads){ delete DB.ads; delete DB.adsV2; delete DB.adsV3; }
 })();
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch(e){ toast('저장 공간이 부족합니다. 첨부 사진 용량을 줄여주세요.'); } }
 function cur(){ return DB.lists.find(l=>l.id===DB.activeId) || DB.lists[0]; }
@@ -1862,68 +1804,11 @@ function who(name, email){
 function fromOf(m){ return who(m.from, m.fromEmail) || '(보낸사람 없음)'; }
 function toOf(m){ return who(m.toName, m.to) || '(받는사람 없음)'; }
 
-/* ---- 광고 슬롯 렌더 ---- */
-function renderAds(){
-  DB.ads = DB.ads || {};
-  document.querySelectorAll('[data-ad]').forEach(el=>{
-    const n = el.getAttribute('data-ad');
-    const a = DB.ads[n];
-    if(a && a.img){
-      el.classList.add('filled');
-      el.innerHTML = '<img src="'+a.img+'" alt="" style="object-fit:'+(a.fit==='contain'?'contain':'cover')+'">';
-    }else{
-      el.classList.remove('filled');
-      el.innerHTML = '<span class="lbl"></span>';
-    }
-  });
-  measureAds();
-}
-/* 비어 있는 슬롯에 번호와 '실제 렌더된' 크기를 적어준다 */
-function measureAds(){
-  document.querySelectorAll('[data-ad]').forEach(el=>{
-    const lb = el.querySelector('.lbl');
-    if(!lb) return;
-    const n = el.getAttribute('data-ad');
-    const r = el.getBoundingClientRect();
-    const w = Math.round(r.width), h = Math.round(r.height);
-    if(!w || !h){ lb.textContent = 'AD-'+n; return; }      /* 아직 화면에 없을 때 */
-    if(w >= 100 && h >= 44) lb.innerHTML = 'AD-'+n+'<em>'+w+' × '+h+'</em>';   /* 넉넉하면 두 줄 */
-    else if(w >= 150)       lb.innerHTML = 'AD-'+n+' <em style="display:inline">· '+w+' × '+h+'</em>';
-    else if(w >= 46)        lb.textContent = 'AD-'+n;
-    else                    lb.textContent = n;
-  });
-}
-let adRzTimer = null;
+let rzTimer = null;
 window.addEventListener('resize', ()=>{
-  clearTimeout(adRzTimer);
-  adRzTimer = setTimeout(()=>{ measureAds(); syncRightHeight(); }, 120);
+  clearTimeout(rzTimer);
+  rzTimer = setTimeout(syncRightHeight, 120);
 });
-
-/* 업로드 이미지를 슬롯 기준 크기(2배)로 줄여 저장 → localStorage 용량 절약 */
-function fitImage(file, n, cb){
-  if(!file) return;
-  if(file.size > 8*1024*1024){ toast('8MB 이하 이미지를 사용해 주세요.'); return; }
-  const slot = AD_SLOTS.find(s=>s.n===String(n)) || { w:800, h:200 };
-  const maxW = slot.w*2, maxH = slot.h*2;
-  const fr = new FileReader();
-  fr.onload = ()=>{
-    const img = new Image();
-    img.onload = ()=>{
-      let w = img.naturalWidth, h = img.naturalHeight;
-      const sc = Math.min(1, Math.max(maxW/w, maxH/h));
-      if(sc >= 1){ cb(fr.result); return; }
-      w = Math.max(1, Math.round(w*sc)); h = Math.max(1, Math.round(h*sc));
-      const c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      let out = c.toDataURL('image/png');
-      if(out.length > 300*1024) out = c.toDataURL('image/jpeg', .86);
-      cb(out.length < fr.result.length ? out : fr.result);
-    };
-    img.onerror = ()=>toast('이미지를 읽을 수 없습니다.');
-    img.src = fr.result;
-  };
-  fr.readAsDataURL(file);
-}
 
 /* 본문 렌더 : # 제목 / **굵게** 지원, 나머지는 줄바꿈 유지 */
 function renderBody(text){
@@ -1949,7 +1834,6 @@ function show(id){
   const el = document.getElementById(id);
   el.classList.add('on');
   el.scrollTop = 0;
-  measureAds();          /* 화면이 바뀌면 그 화면의 광고 슬롯 크기를 다시 잰다 */
 }
 function goHome(){ show('screen-home'); renderHome(); mDrawer(false); mShow('home'); }
 /* 메인화면에서 메일을 누르면 어떤 상태였든 항상 '받은메일함' 목록으로 진입 */
@@ -1977,7 +1861,7 @@ function renderHome(){
     + '<span class="cog">' + svgI('ui-gear','i11') + '</span>';
   const un = l.inbox.filter(m=>!m.read).length;
   document.getElementById('homeUnread').textContent = '+' + un;
-  renderPress(); renderNewsList(); renderTicker(); renderAds(); renderMailPanel();
+  renderPress(); renderNewsList(); renderTicker(); renderMailPanel();
   renderMHome();
   /* PC : 검색기록이 없으면 입력창을 잠근다 (모바일은 입력 필드가 아니라 글자 영역) */
   if(si) si.readOnly = !hasHistory();
@@ -2042,7 +1926,7 @@ function setNewsView(v){
   document.getElementById('newsList').classList.toggle('hide', v!=='list');
   document.getElementById('vwGrid').classList.toggle('on', v==='grid');
   document.getElementById('vwList').classList.toggle('on', v==='list');
-  document.getElementById('newsFootLabel').innerHTML = v==='grid' ? '언론사 더보기 <i>1/4</i>' : '실시간 주요뉴스 <i>2026.09.18</i>';
+  document.getElementById('newsFootLabel').innerHTML = v==='grid' ? '언론사 더보기 <i>1/2</i>' : '실시간 주요뉴스 <i>2026.09.18</i>';
   requestAnimationFrame(syncRightHeight);   /* 목록/그리드 전환으로 높이가 달라지면 우측도 맞춘다 */
 }
 
@@ -2087,7 +1971,6 @@ function openBox(b){
   document.getElementById('navSent').classList.toggle('on', b==='sent');
   renderMailHeader();
   renderList();
-  renderAds();
   renderMList();
   document.querySelector('.m-main').scrollTop = 0;
 }
@@ -2489,52 +2372,7 @@ function renderAdmin(){
   h += mailSection('inbox', '받은 이메일 입력란', l.inbox);
   h += mailSection('sent', '보낸 이메일 입력란', l.sent);
 
-  /* 광고 이미지 */
-  h += adSection();
-
   document.getElementById('admBody').innerHTML = h;
-}
-
-function adSection(){
-  DB.ads = DB.ads || {};
-  let h = '<div class="adm-sec"><h4>광고 이미지 입력란 '
-        + '<span class="hint">모든 리스트 공통 · 손님화면의 빈 광고칸에 표시된 AD 번호와 같습니다</span></h4><div class="in">';
-  AD_SLOTS.forEach(s=>{
-    const a = DB.ads[s.n] || {};
-    h += '<div class="ad-row">'
-      + '<span class="no">AD-'+s.n+'</span>'
-      + '<span class="ds">'+esc(s.name)+'<em>기준 크기 '+esc(s.size)+'</em></span>'
-      + '<span class="pv">'+(a.img?'<img src="'+a.img+'">':svgI('ui-img','i17'))+'</span>'
-      + '<input type="file" accept="image/*" onchange="pickAdImg(\''+s.n+'\',this)">'
-      + '<select onchange="setAdFit(\''+s.n+'\',this.value)"'+(a.img?'':' disabled')+'>'
-      +   '<option value="cover"'+(a.fit!=='contain'?' selected':'')+'>꽉 채우기</option>'
-      +   '<option value="contain"'+(a.fit==='contain'?' selected':'')+'>비율 맞추기</option>'
-      + '</select>'
-      + (a.img?'<button class="mini-btn r" onclick="clearAd(\''+s.n+'\')">삭제</button>'
-              :'<button class="mini-btn" disabled style="opacity:.4">삭제</button>')
-      + '</div>';
-  });
-  h += '<div style="font-size:11.5px;color:#9aa0a6;line-height:1.6;padding-top:10px">'
-     + '넣은 이미지는 기준 크기의 2배로 자동 축소해 저장하므로 용량 부담이 적습니다. '
-     + '이미지를 넣지 않은 칸은 손님화면에 <b>AD-번호와 실제 픽셀 크기</b>가 표시됩니다.</div>';
-  h += '</div></div>';
-  return h;
-}
-function pickAdImg(n, inp){
-  fitImage(inp.files[0], n, d=>{
-    DB.ads = DB.ads || {};
-    DB.ads[n] = { img:d, fit:(DB.ads[n] && DB.ads[n].fit) || 'cover' };
-    save(); renderAds(); renderAdmin();
-    toast('AD-'+n+' 광고 이미지를 넣었습니다.');
-  });
-}
-function setAdFit(n, v){
-  if(!DB.ads || !DB.ads[n]) return;
-  DB.ads[n].fit = v; save(); renderAds();
-}
-function clearAd(n){
-  if(DB.ads) delete DB.ads[n];
-  save(); renderAds(); renderAdmin();
 }
 
 function mailSection(box, title, arr){
@@ -2631,7 +2469,6 @@ function mShow(v){
   if(el){ const sc = el.querySelector('.mh-body,.mm-body,.ml-body,.md-body'); if(sc) sc.scrollTop = 0; }
   if(v === 'menu')  renderMMenu();
   if(v === 'mail')  renderMList();
-  measureAds();
 }
 function mDrawer(on){
   document.getElementById('mv-drawer').classList.toggle('on', !!on);
@@ -2774,7 +2611,6 @@ function closeVerPop(){
 =================================================================== */
 save();
 renderHome();
-renderAds();
 renderMList();
 setNewsView('grid');
 initVerPop();
